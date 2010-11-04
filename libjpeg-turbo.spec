@@ -1,77 +1,43 @@
-Summary:	Library for handling different JPEG files
-Summary(de.UTF-8):	Library zum Verarbeiten verschiedener JPEG-Dateien
-Summary(es.UTF-8):	Biblioteca para manipulación de diferentes archivos JPEGs
-Summary(fr.UTF-8):	Bibliothèque pour gérer différents fichiers JPEG
-Summary(pl.UTF-8):	Biblioteka do manipulacji plikami w formacie JPEG
-Summary(pt_BR.UTF-8):	Biblioteca para manipulação de diferentes arquivos JPEGs
-Summary(ru.UTF-8):	Библиотека для обработки различных JPEG-файлов
-Summary(tr.UTF-8):	JPEG resimlerini işleme kitaplığı
-Summary(uk.UTF-8):	Бібліотека для обробки різноманітних JPEG-файлів
-Name:		libjpeg
-Version:	8b
+%bcond_without	tests
+#
+%define	libjpeg_ver	6b
+Summary:	A MMX/SSE2 accelerated library for manipulating JPEG image files
+Name:		libjpeg-turbo
+Version:	1.0.1
 Release:	1
-License:	distributable
+License:	wxWidgets
 Group:		Libraries
-Source0:	http://www.ijg.org/files/jpegsrc.v%{version}.tar.gz
-# Source0-md5:	e022acbc5b36cd2cb70785f5b575661e
-Source1:	http://www.mif.pg.gda.pl/homepages/ankry/man-PLD/%{name}-non-english-man-pages.tar.bz2
-# Source1-md5:	d6342c015a489de275ada637a77dc2b0
-Patch0:		%{name}-maxmem-sysconf.patch
-URL:		http://www.ijg.org/
+Source0:	http://downloads.sourceforge.net/project/libjpeg-turbo/%{version}/%{name}-%{version}.tar.gz
+# Source0-md5:	e94b72694c9afd716458367dfe84ce1e
+Patch0:		%{name}10-rh639672.patch
+URL:		http://libjpeg-turbo.virtualgl.org/
 BuildRequires:	libtool
+Provides:	libjpeg = %{libjpeg_ver}
+Obsoletes:	libjpeg
+BuildRequires:	libtool
+BuildRequires:	autoconf
+BuildRequires:	automake
+BuildRequires:	nasm
 BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
 
 %description
-The libjpeg package contains a library of functions for manipulating
-JPEG images.
-
-%description -l de.UTF-8
-Dieses Paket ist eine Library mit Funktionen zur Manipulation von
-JPEG-Bildern.
-
-%description -l es.UTF-8
-Este paquete contiene una biblioteca de funciones que manipulan
-imágenes JPEG.
-
-%description -l fr.UTF-8
-Bibliothèque de fonctions qui manipulent des images JPEG.
-
-%description -l pl.UTF-8
-Ten pakiet zawiera bibliotekę funkcji do manipulacji plikami JPEG.
-
-%description -l pt_BR.UTF-8
-Este pacote contém uma biblioteca de funções que manipulam imagens
-JPEG.
-
-%description -l ru.UTF-8
-Библиотека функций для обработки JPEG-изображений и простые клиенты
-для такой обработки.
-
-%description -l tr.UTF-8
-Bu paket, JPEG şekillerini işlemek için kitaplıklar ve basit
-istemciler içerir.
-
-%description -l uk.UTF-8
-Бібліотека функцій для обробки JPEG-зображень та прості клієнти для
-такої обробки.
+libjpeg-turbo is a version of libjpeg which uses MMX, SSE, and SSE2
+SIMD instructions to accelerate baseline JPEG
+compression/decompression by about 2-4x on x86 and x86-64 platforms.
+It is based on libjpeg/SIMD but has numerous enhancements.
 
 %package devel
-Summary:	Headers for developing programs using libjpeg
-Summary(de.UTF-8):	Header zum Entwickeln von Programmen mit libjpeg
-Summary(es.UTF-8):	Archivos de inclusión para desarrollar programas usando libjpeg
-Summary(pl.UTF-8):	Pliki nagłówkowe libjpeg
-Summary(pt_BR.UTF-8):	Arquivos de inclusão para desenvolver programas usando libjpeg
-Summary(ru.UTF-8):	Хедеры для разработки программ, использующих libjpeg
-Summary(tr.UTF-8):	libjpeg için geliştirme kitaplıkları ve başlık dosyaları
-Summary(uk.UTF-8):	Хедери для розробки програм, що використовують libjpeg
+Summary:	Headers for developing programs using libjpeg-turbo
 Group:		Development/Libraries
 Requires:	%{name} = %{version}-%{release}
+Provides:	libjpeg-devel = %{libjpeg_ver}
+Obsoletes:	libjpeg-devel
 Conflicts:	libjpeg6-devel
 
 %description devel
-The libjpeg-devel package includes the header files necessary for
-developing programs which will manipulate JPEG files using the libjpeg
-library.
+The libjpeg-turbo-devel package includes the header files necessary
+for developing programs which will manipulate JPEG files using the
+libjpeg-turbo library.
 
 %description devel -l de.UTF-8
 Dieses Paket bietet alles, was Sie brauchen, um Programme zur
@@ -88,7 +54,7 @@ programmes manipulant des images JPEG, et comprend la documentation.
 
 %description devel -l pl.UTF-8
 Ten pakiet zawiera pliki potrzebne do programowania z wykorzystaniem
-biblioteki libjpeg. Zawiera także dokumentację.
+biblioteki libjpeg-turbo. Zawiera także dokumentację.
 
 %description devel -l pt_BR.UTF-8
 Este pacote é tudo que você precisa para desenvolver programas que
@@ -108,31 +74,33 @@ içerir.
 JPEG-зображеннями, включаючи документацію.
 
 %package static
-Summary:	Static library for developing programs using libjpeg
-Summary(pl.UTF-8):	Biblioteka statyczna libjpeg
-Summary(pt_BR.UTF-8):	Bibliotecas estáticas para desenvolvimento com libjpeg
-Summary(ru.UTF-8):	Статическая библиотека для программирования с libjpeg
-Summary(uk.UTF-8):	Статична бібліотека для програмування з libjpeg
+Summary:	Static library for developing programs using libjpeg-turbo
+Summary(pl.UTF-8):	Biblioteka statyczna libjpeg-turbo
+Summary(pt_BR.UTF-8):	Bibliotecas estáticas para desenvolvimento com libjpeg-turbo
+Summary(ru.UTF-8):	Статическая библиотека для программирования с libjpeg-turbo
+Summary(uk.UTF-8):	Статична бібліотека для програмування з libjpeg-turbo
 Group:		Development/Libraries
 Requires:	%{name}-devel = %{version}-%{release}
-Conflicts:	libjpeg6-static
+Provides:	libjpeg-static = %{libjpeg_ver}
+Obsoletes:	libjpeg-static
+Conflicts:	libjpeg-turbo6-static
 
 %description static
-Static library for developing programs using libjpeg.
+Static library for developing programs using libjpeg-turbo.
 
 %description static -l pl.UTF-8
-Statyczna biblioteka libjpeg.
+Statyczna biblioteka libjpeg-turbo.
 
 %description static -l pt_BR.UTF-8
-Bibliotecas estáticas para desenvolvimento com libjpeg.
+Bibliotecas estáticas para desenvolvimento com libjpeg-turbo.
 
 %description static -l ru.UTF-8
 Этот пакет содержит статические библиотеки, необходимые для написания
-программ, использующих libjpeg.
+программ, использующих libjpeg-turbo.
 
 %description static -l uk.UTF-8
 Цей пакет містить статичні бібліотеки, необхідні для написання
-програм, що використовують libjpeg.
+програм, що використовують libjpeg-turbo.
 
 %package progs
 Summary:	Simple clients for manipulating JPEG images
@@ -141,7 +109,9 @@ Summary(fr.UTF-8):	Clients simples pour manipuler des images JPEG
 Summary(pl.UTF-8):	Kilka prostych programów do manipulowania na plikach JPEG
 Group:		Development/Libraries
 Requires:	%{name} = %{version}-%{release}
-Conflicts:	libjpeg6-progs
+Provides:	libjpeg-progs = %{libjpeg_ver}
+Obsoletes:	libjpeg-progs
+Conflicts:	libjpeg-turbo6-progs
 
 %description progs
 Simple clients for manipulating JPEG images. Libjpeg client programs
@@ -165,34 +135,31 @@ przekształcenia na plikach JPEG. rdjpgcom wyświetla komentarze
 tekstowe dołączone do pliku JPEG, a wrjpgcom wstawia takie komentarze.
 
 %prep
-%setup -q -n jpeg-%{version}
+%setup -q
 %patch0 -p1
 
 %build
+%{__libtoolize}
+%{__aclocal}
+%{__autoconf}
+%{__automake}
+
 %configure \
-	--disable-silent-rules \
 	--enable-shared \
 	--enable-static
 
 %{__make}
 
-LD_PRELOAD=$PWD/.libs/%{name}.so \
-%{__make} test
+%{?with_tests:%{__make} test}
 
 %install
 rm -rf $RPM_BUILD_ROOT
-install -d $RPM_BUILD_ROOT{%{_libdir},%{_includedir},%{_bindir},%{_mandir}/man1}
 
 %{__make} install \
 	DESTDIR=$RPM_BUILD_ROOT
 
-install jversion.h $RPM_BUILD_ROOT%{_includedir}
-
-# remove HAVE_STD{DEF,LIB}_H
-# (not necessary but may generate warnings confusing autoconf)
-sed -i -e 's#.*HAVE_STD..._H.*##g' $RPM_BUILD_ROOT%{_includedir}/jconfig.h
-
-bzip2 -dc %{SOURCE1} | tar xf - -C $RPM_BUILD_ROOT%{_mandir}
+rm $RPM_BUILD_ROOT%{_includedir}/turbojpeg.h
+rm $RPM_BUILD_ROOT%{_libdir}/libturbojpeg.*
 
 %clean
 rm -rf $RPM_BUILD_ROOT
@@ -204,18 +171,16 @@ rm -rf $RPM_BUILD_ROOT
 %defattr(644,root,root,755)
 %doc README change.log
 %attr(755,root,root) %{_libdir}/libjpeg.so.*.*.*
-%attr(755,root,root) %ghost %{_libdir}/libjpeg.so.8
+%attr(755,root,root) %ghost %{_libdir}/libjpeg.so.62
 
 %files devel
 %defattr(644,root,root,755)
-%doc libjpeg.txt structure.txt
 %attr(755,root,root) %{_libdir}/libjpeg.so
 %{_libdir}/libjpeg.la
 %{_includedir}/jconfig.h
 %{_includedir}/jerror.h
 %{_includedir}/jmorecfg.h
 %{_includedir}/jpeglib.h
-%{_includedir}/jversion.h
 
 %files static
 %defattr(644,root,root,755)
@@ -233,6 +198,3 @@ rm -rf $RPM_BUILD_ROOT
 %{_mandir}/man1/jpegtran.1*
 %{_mandir}/man1/rdjpgcom.1*
 %{_mandir}/man1/wrjpgcom.1*
-%lang(fi) %{_mandir}/fi/man1/cjpeg.1*
-%lang(pl) %{_mandir}/pl/man1/cjpeg.1*
-%lang(pl) %{_mandir}/pl/man1/djpeg.1*

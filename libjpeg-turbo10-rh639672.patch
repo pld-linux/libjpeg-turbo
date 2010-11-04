@@ -1,0 +1,1283 @@
+From 195345e454d3df7ff9c07c3d36881ec52e789af2 Mon Sep 17 00:00:00 2001
+From: Mukund Sivaraman <muks@banu.com>
+Date: Sun, 3 Oct 2010 12:23:41 +0530
+Subject: [PATCH] Add support for decoding arithmetic coded content
+
+This is based on a patch by Guido Vollbeding <guivol@esc.de>, which
+included code to both encode and decode arithmetic coded content.
+
+This patch only adds the decoding portion. No new arithmetic coded
+content can be produced, but existing arithmetic coded content can
+be decoded.
+
+libjpeg-turbo with this patch has been tested with some arithmetic
+coded images (digital photographs).
+---
+ Makefile.am       |   17 +-
+ README.arithmetic |  215 +++++++++++++++
+ jaricom.c         |  149 +++++++++++
+ jdarith.c         |  762 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+ jdmaster.c        |    2 +-
+ jdtrans.c         |    2 +-
+ jerror.h          |    2 +
+ jmorecfg.h        |    2 +-
+ jpegint.h         |    2 +
+ 9 files changed, 1142 insertions(+), 11 deletions(-)
+ create mode 100644 README.arithmetic
+ create mode 100644 jaricom.c
+ create mode 100644 jdarith.c
+
+diff --git a/Makefile.am b/Makefile.am
+index f8552ea..1eee598 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -7,14 +7,15 @@ nodist_include_HEADERS = jconfig.h
+ HDRS = jchuff.h jdct.h jdhuff.h jerror.h jinclude.h jmemsys.h jmorecfg.h \
+ 	jpegint.h jpeglib.h jversion.h jsimd.h jsimddct.h
+ 
+-libjpeg_la_SOURCES = $(HDRS) jcapimin.c jcapistd.c jccoefct.c jccolor.c \
+-	jcdctmgr.c jchuff.c jcinit.c jcmainct.c jcmarker.c jcmaster.c \
+-	jcomapi.c jcparam.c jcphuff.c jcprepct.c jcsample.c jctrans.c \
+-	jdapimin.c jdapistd.c jdatadst.c jdatasrc.c jdcoefct.c jdcolor.c \
+-	jddctmgr.c jdhuff.c jdinput.c jdmainct.c jdmarker.c jdmaster.c \
+-	jdmerge.c jdphuff.c jdpostct.c jdsample.c jdtrans.c jerror.c \
+-	jfdctflt.c jfdctfst.c jfdctint.c jidctflt.c jidctfst.c jidctint.c \
+-	jidctred.c jquant1.c jquant2.c jutils.c jmemmgr.c jmemnobs.c
++libjpeg_la_SOURCES = $(HDRS) jaricom.c jcapimin.c jcapistd.c		\
++	jccoefct.c jccolor.c jcdctmgr.c jchuff.c jcinit.c jcmainct.c	\
++	jcmarker.c jcmaster.c jcomapi.c jcparam.c jcphuff.c jcprepct.c	\
++	jcsample.c jctrans.c jdapimin.c jdapistd.c jdarith.c		\
++	jdatadst.c jdatasrc.c jdcoefct.c jdcolor.c jddctmgr.c jdhuff.c	\
++	jdinput.c jdmainct.c jdmarker.c jdmaster.c jdmerge.c jdphuff.c	\
++	jdpostct.c jdsample.c jdtrans.c jerror.c jfdctflt.c jfdctfst.c	\
++	jfdctint.c jidctflt.c jidctfst.c jidctint.c jidctred.c		\
++	jquant1.c jquant2.c jutils.c jmemmgr.c jmemnobs.c
+ 
+ libturbojpeg_la_SOURCES = $(libjpeg_la_SOURCES) turbojpegl.c turbojpeg.h \
+ 	turbojpeg-mapfile
+diff --git a/README.arithmetic b/README.arithmetic
+new file mode 100644
+index 0000000..0dd3b9a
+--- /dev/null
++++ b/README.arithmetic
+@@ -0,0 +1,215 @@
++JPEG arithmetic encoding and decoding portable software implementation
++======================================================================
++
++Release of 28-Mar-98 by Guido Vollbeding <guido@jpegclub.org>
++=============================================================
++
++Primary URLs:
++
++	http://sylvana.net/jpeg-ari/
++	(directory containing the actual archive files:)
++
++	http://sylvana.net/jpeg-ari/jpeg-ari-28mar98.tar.gz
++
++	http://sylvana.net/jpeg-ari/jpeg-ari.zip
++
++
++DISCLAIMER
++==========
++
++This package is distributed in the hope that it will be useful,
++but WITHOUT ANY WARRANTY; without even the implied warranty of
++MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
++
++It is possible that certain products which can be built using this
++software modules might form inventions protected by patent rights in
++some countries (e.g. by patents about arithmetic coding algorithms
++owned by IBM and AT&T in the USA). Provision of this software by the
++author does NOT include any licenses for any patents.
++In those countries where a patent license is required for certain
++applications of this software modules, you will have to obtain such
++a license yourself.
++
++See Annex L in the JPEG spec for further information
++and a list of relevant patents.
++
++
++What is it?
++===========
++
++This is my implementation of the arithmetic encoding and decoding
++back-end for JPEG as specified in the
++
++  ISO/IEC International Standard 10918-1 and CCITT Recommendation
++  ITU-T T.81, "Information Technology - Digital Compression and
++  Coding of Continuous-tone Still Images, Part 1: Requirements
++  and Guidelines".
++
++Arithmetic coding is a state-of-the-art lossless entropy data
++compression method which offers better compression performance
++than the well-established Huffman entropy coding process.
++
++The JPEG standard specifies a particular arithmetic coding scheme
++to be used optionally as alternative to Huffman coding.
++
++
++Who needs it?
++=============
++
++This package might be of interest for people who are looking for
++enhanced state-of-the-art image compression technologies.
++
++It is intended to provide a reasonable tool for experimental,
++comparison and evaluation purposes.
++
++See the Disclaimer above for restricted conditions of usage.
++
++
++How does it work?
++=================
++
++This distribution is organized as add-on to the widespread
++Independent JPEG Group's JPEG software.
++
++Thus, once you managed to install the IJG software distribution
++successfully, there should be no additional problems (portability
++issues etc.) to incorporate this package into the library,
++and usage is straightforward.
++
++Transcode given JPEG files simply with a command like
++
++  jpegtran -arithmetic [-progressive] < orig.jpg > arit.jpg
++
++into an arithmetic coded version LOSSLESSLY! Since there are
++practically no applications in existence which can handle such
++files, you can only transform it back with the same tool
++
++  jpegtran [-optimize] [-progressive] < arit.jpg > orig2.jpg
++
++to verify correct operation.
++
++Thus, you can easily verify the enhanced compression performance
++of the arithmetic coding version compared to the Huffman (with
++fixed or custom tables) version.
++
++The claim to evaluate was that arithmetic coding gives an average
++5-10% compression improvement against Huffman.
++Early tests with this implementation support this claim, and you
++can perform tests with own material.
++
++Here are some actual results:
++
++% ./jpegtran -optimize < testorig.jpg > testopt.jpg
++% ./jpegtran -arithmetic < testorig.jpg > testarit.jpg
++% ./jpegtran < testarit.jpg > testorig2.jpg
++% ./jpegtran -arithmetic -progressive < testorig.jpg > testaritp.jpg
++% ./jpegtran < testaritp.jpg > testorig3.jpg
++% ./jpegtran -optimize < ../butterfly.jpg > ../buttopt.jpg
++% ./jpegtran -progressive < ../butterfly.jpg > ../buttprog.jpg
++% ./jpegtran -arithmetic < ../butterfly.jpg > ../buttarit.jpg
++% ./jpegtran < ../buttarit.jpg > ../butterfly2.jpg
++% ./jpegtran -arithmetic -progressive < ../butterfly.jpg > ../buttaritp.jpg
++% ./jpegtran < ../buttaritp.jpg > ../butterfly3.jpg
++% ls -l test*.jpg
++-rw-r--r--  1 guivol       5153 Apr 13 18:51 testarit.jpg
++-rw-r--r--  1 guivol       5186 Apr 13 18:51 testaritp.jpg
++-rw-r--r--  1 guivol       5756 Apr  2 15:10 testimg.jpg
++-rw-r--r--  1 guivol       5645 Apr  2 15:10 testimgp.jpg
++-rw-r--r--  1 guivol       5463 Apr 13 18:51 testopt.jpg
++-rw-r--r--  1 guivol       5770 Apr  2 15:10 testorig.jpg
++-rw-r--r--  1 guivol       5770 Apr 13 18:51 testorig2.jpg
++-rw-r--r--  1 guivol       5770 Apr 13 18:51 testorig3.jpg
++-rw-r--r--  1 guivol       5655 Apr  2 15:10 testprog.jpg
++% ls -l ../butt*.jpg
++-rw-r--r--  1 guivol     460091 Apr 13 18:52 ../buttarit.jpg
++-rw-r--r--  1 guivol     453703 Apr 13 18:52 ../buttaritp.jpg
++-rw-r--r--  1 guivol     527823 Nov 19 18:41 ../butterfly.jpg
++-rw-r--r--  1 guivol     527823 Apr 13 18:52 ../butterfly2.jpg
++-rw-r--r--  1 guivol     527823 Apr 13 18:52 ../butterfly3.jpg
++-rw-r--r--  1 guivol     511834 Apr 13 18:52 ../buttopt.jpg
++-rw-r--r--  1 guivol     492237 Apr 13 18:52 ../buttprog.jpg
++% 
++
++Note that arithmetic coding requires only a single processing
++pass due to its fully-adaptive nature, and compared to one-pass
++(fixed tables) Huffman the arithmetic coded version consistently
++achieves 10% compression improvement.
++Compared with two-pass (custom tables) Huffman the improvement
++is 5-10%.
++
++Note that I wasn't able yet to cross-check interoperability of
++the produced files with other implementations.
++Thus, I can't be sure that the files are compliant to the spec,
++but I hope so and the tests support it.
++The encoding and decoding processes should be correct anyway,
++however, in the sense that they are complementary to each other
++and thus retain data integrity.
++
++I would appreciate any indications for compliance or interoperability
++with other implementations from somebody.
++Please let me know if you are able to cross-check something.
++
++
++Installation
++============
++
++The installation is a 2-stage procedure:
++
++1. Preparing the IJG package for potential incorporation
++   of the arithmetic coding feature.
++
++2. Incorporation of the actual arithmetic coding modules
++   and enabling the feature for usage.
++
++The reason for this 2-stage process is the hope to make
++step 1 obsolete in future IJG releases.
++The actual implementation should remain separate IMHO due
++to the different usage conditions.
++
++Step 1:
++
++1.1. Copy all files from the subdirectory 'patchv6b' into
++     the IJG software's v6b source directory.
++     This includes minor patches to some files and 3 extra
++     files which hold place for the actual implementation.
++
++1.2. Update your Makefile/Projectfile for the inclusion of
++     the 3 extra files. This will be done automatically
++     if you use a configure-generated makefile and type
++     './configure' (reconfigure).
++
++1.3. Recompile ('make').
++
++See the file 'PATCHES' in 'patchv6b' for details.
++
++Step 2:
++
++2.1. Replace the 3 placeholder files by the actual implementation
++     modules.
++
++2.2. Enable application support of the new features by #defining
++     C_ARITH_CODING_SUPPORTED and D_ARITH_CODING_SUPPORTED
++     in 'jmorecfg.h'.
++
++2.3. Recompile ('make').
++
++Note that I suggest to add 3 placeholder files to the IJG
++distribution. This would remove the need for system-dependent
++changes (Makefiles) and thus considerably simplify the actual
++installation for systems without a configure-generated makefile.
++
++
++References
++==========
++
++- The Independent JPEG Group's software
++
++- JBIG-KIT lossless image compression library by Markus Kuhn
++
++- William B. Pennebaker, Joan L. Mitchell:
++  "JPEG Still Image Data Compression Standard",
++  Van Nostrand Reinhold, 1993, ISBN 0-442-01272-1.
++
++- jpeg-faq (http://www.faqs.org/faqs/jpeg-faq/)
++
++- compression-faq (http://www.faqs.org/faqs/compression-faq/)
+diff --git a/jaricom.c b/jaricom.c
+new file mode 100644
+index 0000000..e4292b0
+--- /dev/null
++++ b/jaricom.c
+@@ -0,0 +1,149 @@
++/*
++ * jaricom.c
++ *
++ * Copyright (C) 1997, Guido Vollbeding <guivol@esc.de>.
++ * This file is NOT part of the Independent JPEG Group's software
++ * for legal reasons.
++ * See the accompanying README file for conditions of distribution and use.
++ *
++ * This file contains probability estimation tables for common use in
++ * arithmetic entropy encoding and decoding routines.
++ *
++ * This data represents Table D.2 in the JPEG spec (ISO/IEC IS 10918-1
++ * and CCITT Recommendation ITU-T T.81) and Table 24 in the JBIG spec
++ * (ISO/IEC IS 11544 and CCITT Recommendation ITU-T T.82).
++ */
++
++#define JPEG_INTERNALS
++#include "jinclude.h"
++#include "jpeglib.h"
++
++/* The following #define specifies the packing of the four components
++ * into the compact INT32 representation.
++ * Note that this formula must match the actual arithmetic encoder
++ * and decoder implementation. The implementation has to be changed
++ * if this formula is changed.
++ * The current organisation is leaned on Markus Kuhn's JBIG
++ * implementation (jbig_tab.c).
++ */
++
++#define V(a,b,c,d) (((INT32)a << 16) | ((INT32)c << 8) | ((INT32)d << 7) | b)
++
++const INT32 jaritab[113] = {
++/*
++ * Index, Qe_Value, Next_Index_LPS, Next_Index_MPS, Switch_MPS
++ */
++/*   0 */  V( 0x5a1d,   1,   1, 1 ),
++/*   1 */  V( 0x2586,  14,   2, 0 ),
++/*   2 */  V( 0x1114,  16,   3, 0 ),
++/*   3 */  V( 0x080b,  18,   4, 0 ),
++/*   4 */  V( 0x03d8,  20,   5, 0 ),
++/*   5 */  V( 0x01da,  23,   6, 0 ),
++/*   6 */  V( 0x00e5,  25,   7, 0 ),
++/*   7 */  V( 0x006f,  28,   8, 0 ),
++/*   8 */  V( 0x0036,  30,   9, 0 ),
++/*   9 */  V( 0x001a,  33,  10, 0 ),
++/*  10 */  V( 0x000d,  35,  11, 0 ),
++/*  11 */  V( 0x0006,   9,  12, 0 ),
++/*  12 */  V( 0x0003,  10,  13, 0 ),
++/*  13 */  V( 0x0001,  12,  13, 0 ),
++/*  14 */  V( 0x5a7f,  15,  15, 1 ),
++/*  15 */  V( 0x3f25,  36,  16, 0 ),
++/*  16 */  V( 0x2cf2,  38,  17, 0 ),
++/*  17 */  V( 0x207c,  39,  18, 0 ),
++/*  18 */  V( 0x17b9,  40,  19, 0 ),
++/*  19 */  V( 0x1182,  42,  20, 0 ),
++/*  20 */  V( 0x0cef,  43,  21, 0 ),
++/*  21 */  V( 0x09a1,  45,  22, 0 ),
++/*  22 */  V( 0x072f,  46,  23, 0 ),
++/*  23 */  V( 0x055c,  48,  24, 0 ),
++/*  24 */  V( 0x0406,  49,  25, 0 ),
++/*  25 */  V( 0x0303,  51,  26, 0 ),
++/*  26 */  V( 0x0240,  52,  27, 0 ),
++/*  27 */  V( 0x01b1,  54,  28, 0 ),
++/*  28 */  V( 0x0144,  56,  29, 0 ),
++/*  29 */  V( 0x00f5,  57,  30, 0 ),
++/*  30 */  V( 0x00b7,  59,  31, 0 ),
++/*  31 */  V( 0x008a,  60,  32, 0 ),
++/*  32 */  V( 0x0068,  62,  33, 0 ),
++/*  33 */  V( 0x004e,  63,  34, 0 ),
++/*  34 */  V( 0x003b,  32,  35, 0 ),
++/*  35 */  V( 0x002c,  33,   9, 0 ),
++/*  36 */  V( 0x5ae1,  37,  37, 1 ),
++/*  37 */  V( 0x484c,  64,  38, 0 ),
++/*  38 */  V( 0x3a0d,  65,  39, 0 ),
++/*  39 */  V( 0x2ef1,  67,  40, 0 ),
++/*  40 */  V( 0x261f,  68,  41, 0 ),
++/*  41 */  V( 0x1f33,  69,  42, 0 ),
++/*  42 */  V( 0x19a8,  70,  43, 0 ),
++/*  43 */  V( 0x1518,  72,  44, 0 ),
++/*  44 */  V( 0x1177,  73,  45, 0 ),
++/*  45 */  V( 0x0e74,  74,  46, 0 ),
++/*  46 */  V( 0x0bfb,  75,  47, 0 ),
++/*  47 */  V( 0x09f8,  77,  48, 0 ),
++/*  48 */  V( 0x0861,  78,  49, 0 ),
++/*  49 */  V( 0x0706,  79,  50, 0 ),
++/*  50 */  V( 0x05cd,  48,  51, 0 ),
++/*  51 */  V( 0x04de,  50,  52, 0 ),
++/*  52 */  V( 0x040f,  50,  53, 0 ),
++/*  53 */  V( 0x0363,  51,  54, 0 ),
++/*  54 */  V( 0x02d4,  52,  55, 0 ),
++/*  55 */  V( 0x025c,  53,  56, 0 ),
++/*  56 */  V( 0x01f8,  54,  57, 0 ),
++/*  57 */  V( 0x01a4,  55,  58, 0 ),
++/*  58 */  V( 0x0160,  56,  59, 0 ),
++/*  59 */  V( 0x0125,  57,  60, 0 ),
++/*  60 */  V( 0x00f6,  58,  61, 0 ),
++/*  61 */  V( 0x00cb,  59,  62, 0 ),
++/*  62 */  V( 0x00ab,  61,  63, 0 ),
++/*  63 */  V( 0x008f,  61,  32, 0 ),
++/*  64 */  V( 0x5b12,  65,  65, 1 ),
++/*  65 */  V( 0x4d04,  80,  66, 0 ),
++/*  66 */  V( 0x412c,  81,  67, 0 ),
++/*  67 */  V( 0x37d8,  82,  68, 0 ),
++/*  68 */  V( 0x2fe8,  83,  69, 0 ),
++/*  69 */  V( 0x293c,  84,  70, 0 ),
++/*  70 */  V( 0x2379,  86,  71, 0 ),
++/*  71 */  V( 0x1edf,  87,  72, 0 ),
++/*  72 */  V( 0x1aa9,  87,  73, 0 ),
++/*  73 */  V( 0x174e,  72,  74, 0 ),
++/*  74 */  V( 0x1424,  72,  75, 0 ),
++/*  75 */  V( 0x119c,  74,  76, 0 ),
++/*  76 */  V( 0x0f6b,  74,  77, 0 ),
++/*  77 */  V( 0x0d51,  75,  78, 0 ),
++/*  78 */  V( 0x0bb6,  77,  79, 0 ),
++/*  79 */  V( 0x0a40,  77,  48, 0 ),
++/*  80 */  V( 0x5832,  80,  81, 1 ),
++/*  81 */  V( 0x4d1c,  88,  82, 0 ),
++/*  82 */  V( 0x438e,  89,  83, 0 ),
++/*  83 */  V( 0x3bdd,  90,  84, 0 ),
++/*  84 */  V( 0x34ee,  91,  85, 0 ),
++/*  85 */  V( 0x2eae,  92,  86, 0 ),
++/*  86 */  V( 0x299a,  93,  87, 0 ),
++/*  87 */  V( 0x2516,  86,  71, 0 ),
++/*  88 */  V( 0x5570,  88,  89, 1 ),
++/*  89 */  V( 0x4ca9,  95,  90, 0 ),
++/*  90 */  V( 0x44d9,  96,  91, 0 ),
++/*  91 */  V( 0x3e22,  97,  92, 0 ),
++/*  92 */  V( 0x3824,  99,  93, 0 ),
++/*  93 */  V( 0x32b4,  99,  94, 0 ),
++/*  94 */  V( 0x2e17,  93,  86, 0 ),
++/*  95 */  V( 0x56a8,  95,  96, 1 ),
++/*  96 */  V( 0x4f46, 101,  97, 0 ),
++/*  97 */  V( 0x47e5, 102,  98, 0 ),
++/*  98 */  V( 0x41cf, 103,  99, 0 ),
++/*  99 */  V( 0x3c3d, 104, 100, 0 ),
++/* 100 */  V( 0x375e,  99,  93, 0 ),
++/* 101 */  V( 0x5231, 105, 102, 0 ),
++/* 102 */  V( 0x4c0f, 106, 103, 0 ),
++/* 103 */  V( 0x4639, 107, 104, 0 ),
++/* 104 */  V( 0x415e, 103,  99, 0 ),
++/* 105 */  V( 0x5627, 105, 106, 1 ),
++/* 106 */  V( 0x50e7, 108, 107, 0 ),
++/* 107 */  V( 0x4b85, 109, 103, 0 ),
++/* 108 */  V( 0x5597, 110, 109, 0 ),
++/* 109 */  V( 0x504f, 111, 107, 0 ),
++/* 110 */  V( 0x5a10, 110, 111, 1 ),
++/* 111 */  V( 0x5522, 112, 109, 0 ),
++/* 112 */  V( 0x59eb, 112, 111, 1 )
++};
+diff --git a/jdarith.c b/jdarith.c
+new file mode 100644
+index 0000000..1ef513e
+--- /dev/null
++++ b/jdarith.c
+@@ -0,0 +1,762 @@
++/*
++ * jdarith.c
++ *
++ * Copyright (C) 1997, Guido Vollbeding <guivol@esc.de>.
++ * This file is NOT part of the Independent JPEG Group's software
++ * for legal reasons.
++ * See the accompanying README file for conditions of distribution and use.
++ *
++ * This file contains portable arithmetic entropy decoding routines for JPEG
++ * (implementing the ISO/IEC IS 10918-1 and CCITT Recommendation ITU-T T.81).
++ *
++ * Both sequential and progressive modes are supported in this single module.
++ *
++ * Suspension is not currently supported in this module.
++ */
++
++#define JPEG_INTERNALS
++#include "jinclude.h"
++#include "jpeglib.h"
++
++
++/* Expanded entropy decoder object for arithmetic decoding. */
++
++typedef struct {
++  struct jpeg_entropy_decoder pub; /* public fields */
++
++  INT32 c;       /* C register, base of coding interval + input bit buffer */
++  INT32 a;               /* A register, normalized size of coding interval */
++  int ct;     /* bit shift counter, # of bits left in bit buffer part of C */
++                                                         /* init: ct = -16 */
++                                                         /* run: ct = 0..7 */
++                                                         /* error: ct = -1 */
++  int last_dc_val[MAX_COMPS_IN_SCAN]; /* last DC coef for each component */
++  int dc_context[MAX_COMPS_IN_SCAN]; /* context index for DC conditioning */
++
++  unsigned int restarts_to_go;	/* MCUs left in this restart interval */
++
++  /* Pointers to statistics areas (these workspaces have image lifespan) */
++  unsigned char * dc_stats[NUM_ARITH_TBLS];
++  unsigned char * ac_stats[NUM_ARITH_TBLS];
++} arith_entropy_decoder;
++
++typedef arith_entropy_decoder * arith_entropy_ptr;
++
++/* The following two definitions specify the allocation chunk size
++ * for the statistics area.
++ * According to sections F.1.4.4.1.3 and F.1.4.4.2, we need at least
++ * 49 statistics bins for DC, and 245 statistics bins for AC coding.
++ * Note that we use one additional AC bin for codings with fixed
++ * probability (0.5), thus the minimum number for AC is 246.
++ *
++ * We use a compact representation with 1 byte per statistics bin,
++ * thus the numbers directly represent byte sizes.
++ * This 1 byte per statistics bin contains the meaning of the MPS
++ * (more probable symbol) in the highest bit (mask 0x80), and the
++ * index into the probability estimation state machine table
++ * in the lower bits (mask 0x7F).
++ */
++
++#define DC_STAT_BINS 64
++#define AC_STAT_BINS 256
++
++
++LOCAL(int)
++get_byte (j_decompress_ptr cinfo)
++/* Read next input byte; we do not support suspension in this module. */
++{
++  struct jpeg_source_mgr * src = cinfo->src;
++
++  if (src->bytes_in_buffer == 0)
++    if (! (*src->fill_input_buffer) (cinfo))
++      ERREXIT(cinfo, JERR_CANT_SUSPEND);
++  src->bytes_in_buffer--;
++  return GETJOCTET(*src->next_input_byte++);
++}
++
++
++/*
++ * The core arithmetic decoding routine (common in JPEG and JBIG).
++ * This needs to go as fast as possible.
++ * Machine-dependent optimization facilities
++ * are not utilized in this portable implementation.
++ * However, this code should be fairly efficient and
++ * may be a good base for further optimizations anyway.
++ *
++ * Return value is 0 or 1 (binary decision).
++ *
++ * Note: I've changed the handling of the code base & bit
++ * buffer register C compared to other implementations
++ * based on the standards layout & procedures.
++ * While it also contains both the actual base of the
++ * coding interval (16 bits) and the next-bits buffer,
++ * the cut-point between these two parts is floating
++ * (instead of fixed) with the bit shift counter CT.
++ * Thus, we also need only one (variable instead of
++ * fixed size) shift for the LPS/MPS decision, and
++ * we can get away with any renormalization update
++ * of C (except for new data insertion, of course).
++ *
++ * I've also introduced a new scheme for accessing
++ * the probability estimation state machine table,
++ * derived from Markus Kuhn's JBIG implementation.
++ */
++
++LOCAL(int)
++arith_decode (j_decompress_ptr cinfo, unsigned char *st)
++{
++  extern const INT32 jaritab[];
++  register arith_entropy_ptr e = (arith_entropy_ptr) cinfo->entropy;
++  register unsigned char nl, nm;
++  register INT32 qe, temp;
++  register int sv, data;
++
++  /* Renormalization & data input per section D.2.6 */
++  while (e->a < 0x8000L) {
++    if (--e->ct < 0) {
++      /* Need to fetch next data byte */
++      if (cinfo->unread_marker)
++	data = 0;		/* stuff zero data */
++      else {
++	data = get_byte(cinfo);	/* read next input byte */
++	if (data == 0xFF) {	/* zero stuff or marker code */
++	  do data = get_byte(cinfo);
++	  while (data == 0xFF);	/* swallow extra 0xFF bytes */
++	  if (data == 0)
++	    data = 0xFF;	/* discard stuffed zero byte */
++	  else {
++	    /* Note: Different from the Huffman decoder, hitting
++	     * a marker while processing the compressed data
++	     * segment is legal in arithmetic coding.
++	     * The convention is to supply zero data
++	     * then until decoding is complete.
++	     */
++	    cinfo->unread_marker = data;
++	    data = 0;
++	  }
++	}
++      }
++      e->c = (e->c << 8) | data; /* insert data into C register */
++      if ((e->ct += 8) < 0)	 /* update bit shift counter */
++	/* Need more initial bytes */
++	if (++e->ct == 0)
++	  /* Got 2 initial bytes -> re-init A and exit loop */
++	  e->a = 0x8000L; /* => e->a = 0x10000L after loop exit */
++    }
++    e->a <<= 1;
++  }
++
++  /* Fetch values from our compact representation of Table D.2:
++   * Qe values and probability estimation state machine
++   */
++  sv = *st;
++  qe = jaritab[sv & 0x7F];	/* => Qe_Value */
++  nl = qe & 0xFF; qe >>= 8;	/* Next_Index_LPS + Switch_MPS */
++  nm = qe & 0xFF; qe >>= 8;	/* Next_Index_MPS */
++
++  /* Decode & estimation procedures per sections D.2.4 & D.2.5 */
++  temp = e->a - qe;
++  e->a = temp;
++  temp <<= e->ct;
++  if (e->c >= temp) {
++    e->c -= temp;
++    /* Conditional LPS (less probable symbol) exchange */
++    if (e->a < qe) {
++      e->a = qe;
++      *st = (sv & 0x80) ^ nm;	/* Estimate_after_MPS */
++    } else {
++      e->a = qe;
++      *st = (sv & 0x80) ^ nl;	/* Estimate_after_LPS */
++      sv ^= 0x80;		/* Exchange LPS/MPS */
++    }
++  } else if (e->a < 0x8000L) {
++    /* Conditional MPS (more probable symbol) exchange */
++    if (e->a < qe) {
++      *st = (sv & 0x80) ^ nl;	/* Estimate_after_LPS */
++      sv ^= 0x80;		/* Exchange LPS/MPS */
++    } else {
++      *st = (sv & 0x80) ^ nm;	/* Estimate_after_MPS */
++    }
++  }
++
++  return sv >> 7;
++}
++
++
++/*
++ * Check for a restart marker & resynchronize decoder.
++ */
++
++LOCAL(void)
++process_restart (j_decompress_ptr cinfo)
++{
++  arith_entropy_ptr entropy = (arith_entropy_ptr) cinfo->entropy;
++  int ci;
++  jpeg_component_info * compptr;
++
++  /* Advance past the RSTn marker */
++  if (! (*cinfo->marker->read_restart_marker) (cinfo))
++    ERREXIT(cinfo, JERR_CANT_SUSPEND);
++
++  for (ci = 0; ci < cinfo->comps_in_scan; ci++) {
++    compptr = cinfo->cur_comp_info[ci];
++    /* Re-initialize statistics areas */
++    if (cinfo->progressive_mode == 0 || (cinfo->Ss == 0 && cinfo->Ah == 0)) {
++      MEMZERO(entropy->dc_stats[compptr->dc_tbl_no], DC_STAT_BINS);
++      /* Reset DC predictions to 0 */
++      entropy->last_dc_val[ci] = 0;
++      entropy->dc_context[ci] = 0;
++    }
++    if (cinfo->progressive_mode == 0 || cinfo->Ss) {
++      MEMZERO(entropy->ac_stats[compptr->ac_tbl_no], AC_STAT_BINS);
++    }
++  }
++
++  /* Reset arithmetic decoding variables */
++  entropy->c = 0;
++  entropy->a = 0;
++  entropy->ct = -16;	/* force reading 2 initial bytes to fill C */
++
++  /* Reset restart counter */
++  entropy->restarts_to_go = cinfo->restart_interval;
++}
++
++
++/*
++ * Arithmetic MCU decoding.
++ * Each of these routines decodes and returns one MCU's worth of
++ * arithmetic-compressed coefficients.
++ * The coefficients are reordered from zigzag order into natural array order,
++ * but are not dequantized.
++ *
++ * The i'th block of the MCU is stored into the block pointed to by
++ * MCU_data[i].  WE ASSUME THIS AREA IS INITIALLY ZEROED BY THE CALLER.
++ */
++
++/*
++ * MCU decoding for DC initial scan (either spectral selection,
++ * or first pass of successive approximation).
++ */
++
++METHODDEF(boolean)
++decode_mcu_DC_first (j_decompress_ptr cinfo, JBLOCKROW *MCU_data)
++{
++  arith_entropy_ptr entropy = (arith_entropy_ptr) cinfo->entropy;
++  JBLOCKROW block;
++  unsigned char *st;
++  int blkn, ci, tbl, sign;
++  int v, m;
++
++  /* Process restart marker if needed */
++  if (cinfo->restart_interval) {
++    if (entropy->restarts_to_go == 0)
++      process_restart(cinfo);
++    entropy->restarts_to_go--;
++  }
++
++  if (entropy->ct == -1) return TRUE;	/* if error do nothing */
++
++  /* Outer loop handles each block in the MCU */
++
++  for (blkn = 0; blkn < cinfo->blocks_in_MCU; blkn++) {
++    block = MCU_data[blkn];
++    ci = cinfo->MCU_membership[blkn];
++    tbl = cinfo->cur_comp_info[ci]->dc_tbl_no;
++
++    /* Sections F.2.4.1 & F.1.4.4.1: Decoding of DC coefficients */
++
++    /* Table F.4: Point to statistics bin S0 for DC coefficient coding */
++    st = entropy->dc_stats[tbl] + entropy->dc_context[ci];
++
++    /* Figure F.19: Decode_DC_DIFF */
++    if (arith_decode(cinfo, st) == 0)
++      entropy->dc_context[ci] = 0;
++    else {
++      /* Figure F.21: Decoding nonzero value v */
++      /* Figure F.22: Decoding the sign of v */
++      sign = arith_decode(cinfo, st + 1);
++      st += 2; st += sign;
++      /* Figure F.23: Decoding the magnitude category of v */
++      if ((m = arith_decode(cinfo, st)) != 0) {
++	st = entropy->dc_stats[tbl] + 20;	/* Table F.4: X1 = 20 */
++	while (arith_decode(cinfo, st)) {
++	  if ((m <<= 1) == 0x8000) {
++	    WARNMS(cinfo, JWRN_ARITH_BAD_CODE);
++	    entropy->ct = -1;			/* magnitude overflow */
++	    return TRUE;
++	  }
++	  st += 1;
++	}
++      }
++      /* Section F.1.4.4.1.2: Establish dc_context conditioning category */
++      if (m < (int) (((INT32) 1 << cinfo->arith_dc_L[tbl]) >> 1))
++	entropy->dc_context[ci] = 0;		   /* zero diff category */
++      else if (m > (int) (((INT32) 1 << cinfo->arith_dc_U[tbl]) >> 1))
++	entropy->dc_context[ci] = 12 + (sign * 4); /* large diff category */
++      else
++	entropy->dc_context[ci] = 4 + (sign * 4);  /* small diff category */
++      v = m;
++      /* Figure F.24: Decoding the magnitude bit pattern of v */
++      st += 14;
++      while (m >>= 1)
++	if (arith_decode(cinfo, st)) v |= m;
++      v += 1; if (sign) v = -v;
++      entropy->last_dc_val[ci] += v;
++    }
++
++    /* Scale and output the DC coefficient (assumes jpeg_natural_order[0]=0) */
++    (*block)[0] = (JCOEF) (entropy->last_dc_val[ci] << cinfo->Al);
++  }
++
++  return TRUE;
++}
++
++
++/*
++ * MCU decoding for AC initial scan (either spectral selection,
++ * or first pass of successive approximation).
++ */
++
++METHODDEF(boolean)
++decode_mcu_AC_first (j_decompress_ptr cinfo, JBLOCKROW *MCU_data)
++{
++  arith_entropy_ptr entropy = (arith_entropy_ptr) cinfo->entropy;
++  JBLOCKROW block;
++  unsigned char *st;
++  int tbl, sign, k;
++  int v, m;
++
++  /* Process restart marker if needed */
++  if (cinfo->restart_interval) {
++    if (entropy->restarts_to_go == 0)
++      process_restart(cinfo);
++    entropy->restarts_to_go--;
++  }
++
++  if (entropy->ct == -1) return TRUE;	/* if error do nothing */
++
++  /* There is always only one block per MCU */
++  block = MCU_data[0];
++  tbl = cinfo->cur_comp_info[0]->ac_tbl_no;
++
++  /* Sections F.2.4.2 & F.1.4.4.2: Decoding of AC coefficients */
++
++  /* Figure F.20: Decode_AC_coefficients */
++  for (k = cinfo->Ss; k <= cinfo->Se; k++) {
++    st = entropy->ac_stats[tbl] + 3 * (k - 1);
++    if (arith_decode(cinfo, st)) break;		/* EOB flag */
++    while (arith_decode(cinfo, st + 1) == 0) {
++      st += 3; k++;
++      if (k > cinfo->Se) {
++	WARNMS(cinfo, JWRN_ARITH_BAD_CODE);
++	entropy->ct = -1;			/* spectral overflow */
++	return TRUE;
++      }
++    }
++    /* Figure F.21: Decoding nonzero value v */
++    /* Figure F.22: Decoding the sign of v */
++    entropy->ac_stats[tbl][245] = 0;
++    sign = arith_decode(cinfo, entropy->ac_stats[tbl] + 245);
++    st += 2;
++    /* Figure F.23: Decoding the magnitude category of v */
++    if ((m = arith_decode(cinfo, st)) != 0) {
++      if (arith_decode(cinfo, st)) {
++	m <<= 1;
++	st = entropy->ac_stats[tbl] +
++	     (k <= cinfo->arith_ac_K[tbl] ? 189 : 217);
++	while (arith_decode(cinfo, st)) {
++	  if ((m <<= 1) == 0x8000) {
++	    WARNMS(cinfo, JWRN_ARITH_BAD_CODE);
++	    entropy->ct = -1;			/* magnitude overflow */
++	    return TRUE;
++	  }
++	  st += 1;
++	}
++      }
++    }
++    v = m;
++    /* Figure F.24: Decoding the magnitude bit pattern of v */
++    st += 14;
++    while (m >>= 1)
++      if (arith_decode(cinfo, st)) v |= m;
++    v += 1; if (sign) v = -v;
++    /* Scale and output coefficient in natural (dezigzagged) order */
++    (*block)[jpeg_natural_order[k]] = (JCOEF) (v << cinfo->Al);
++  }
++
++  return TRUE;
++}
++
++
++/*
++ * MCU decoding for DC successive approximation refinement scan.
++ */
++
++METHODDEF(boolean)
++decode_mcu_DC_refine (j_decompress_ptr cinfo, JBLOCKROW *MCU_data)
++{
++  arith_entropy_ptr entropy = (arith_entropy_ptr) cinfo->entropy;
++  unsigned char st[4];
++  int p1, blkn;
++
++  /* Process restart marker if needed */
++  if (cinfo->restart_interval) {
++    if (entropy->restarts_to_go == 0)
++      process_restart(cinfo);
++    entropy->restarts_to_go--;
++  }
++
++  p1 = 1 << cinfo->Al;		/* 1 in the bit position being coded */
++
++  /* Outer loop handles each block in the MCU */
++
++  for (blkn = 0; blkn < cinfo->blocks_in_MCU; blkn++) {
++    st[0] = 0;	/* use fixed probability estimation */
++    /* Encoded data is simply the next bit of the two's-complement DC value */
++    if (arith_decode(cinfo, st))
++      MCU_data[blkn][0][0] |= p1;
++  }
++
++  return TRUE;
++}
++
++
++/*
++ * MCU decoding for AC successive approximation refinement scan.
++ */
++
++METHODDEF(boolean)
++decode_mcu_AC_refine (j_decompress_ptr cinfo, JBLOCKROW *MCU_data)
++{
++  arith_entropy_ptr entropy = (arith_entropy_ptr) cinfo->entropy;
++  JBLOCKROW block;
++  JCOEFPTR thiscoef;
++  unsigned char *st;
++  int tbl, k, kex;
++  int p1, m1;
++
++  /* Process restart marker if needed */
++  if (cinfo->restart_interval) {
++    if (entropy->restarts_to_go == 0)
++      process_restart(cinfo);
++    entropy->restarts_to_go--;
++  }
++
++  if (entropy->ct == -1) return TRUE;	/* if error do nothing */
++
++  /* There is always only one block per MCU */
++  block = MCU_data[0];
++  tbl = cinfo->cur_comp_info[0]->ac_tbl_no;
++
++  p1 = 1 << cinfo->Al;		/* 1 in the bit position being coded */
++  m1 = (-1) << cinfo->Al;	/* -1 in the bit position being coded */
++
++  /* Establish EOBx (previous stage end-of-block) index */
++  for (kex = cinfo->Se + 1; kex > 1; kex--)
++    if ((*block)[jpeg_natural_order[kex - 1]]) break;
++
++  for (k = cinfo->Ss; k <= cinfo->Se; k++) {
++    st = entropy->ac_stats[tbl] + 3 * (k - 1);
++    if (k >= kex)
++      if (arith_decode(cinfo, st)) break;	/* EOB flag */
++    for (;;) {
++      thiscoef = *block + jpeg_natural_order[k];
++      if (*thiscoef) {				/* previously nonzero coef */
++	if (arith_decode(cinfo, st + 2))
++	  if (*thiscoef < 0)
++	    *thiscoef += m1;
++	  else
++	    *thiscoef += p1;
++	break;
++      }
++      if (arith_decode(cinfo, st + 1)) {	/* newly nonzero coef */
++	entropy->ac_stats[tbl][245] = 0;
++	if (arith_decode(cinfo, entropy->ac_stats[tbl] + 245))
++	  *thiscoef = m1;
++	else
++	  *thiscoef = p1;
++	break;
++      }
++      st += 3; k++;
++      if (k > cinfo->Se) {
++	WARNMS(cinfo, JWRN_ARITH_BAD_CODE);
++	entropy->ct = -1;			/* spectral overflow */
++	return TRUE;
++      }
++    }
++  }
++
++  return TRUE;
++}
++
++
++/*
++ * Decode one MCU's worth of arithmetic-compressed coefficients.
++ */
++
++METHODDEF(boolean)
++decode_mcu (j_decompress_ptr cinfo, JBLOCKROW *MCU_data)
++{
++  arith_entropy_ptr entropy = (arith_entropy_ptr) cinfo->entropy;
++  jpeg_component_info * compptr;
++  JBLOCKROW block;
++  unsigned char *st;
++  int blkn, ci, tbl, sign, k;
++  int v, m;
++
++  /* Process restart marker if needed */
++  if (cinfo->restart_interval) {
++    if (entropy->restarts_to_go == 0)
++      process_restart(cinfo);
++    entropy->restarts_to_go--;
++  }
++
++  if (entropy->ct == -1) return TRUE;	/* if error do nothing */
++
++  /* Outer loop handles each block in the MCU */
++
++  for (blkn = 0; blkn < cinfo->blocks_in_MCU; blkn++) {
++    block = MCU_data[blkn];
++    ci = cinfo->MCU_membership[blkn];
++    compptr = cinfo->cur_comp_info[ci];
++
++    /* Sections F.2.4.1 & F.1.4.4.1: Decoding of DC coefficients */
++
++    tbl = compptr->dc_tbl_no;
++
++    /* Table F.4: Point to statistics bin S0 for DC coefficient coding */
++    st = entropy->dc_stats[tbl] + entropy->dc_context[ci];
++
++    /* Figure F.19: Decode_DC_DIFF */
++    if (arith_decode(cinfo, st) == 0)
++      entropy->dc_context[ci] = 0;
++    else {
++      /* Figure F.21: Decoding nonzero value v */
++      /* Figure F.22: Decoding the sign of v */
++      sign = arith_decode(cinfo, st + 1);
++      st += 2; st += sign;
++      /* Figure F.23: Decoding the magnitude category of v */
++      if ((m = arith_decode(cinfo, st)) != 0) {
++	st = entropy->dc_stats[tbl] + 20;	/* Table F.4: X1 = 20 */
++	while (arith_decode(cinfo, st)) {
++	  if ((m <<= 1) == 0x8000) {
++	    WARNMS(cinfo, JWRN_ARITH_BAD_CODE);
++	    entropy->ct = -1;			/* magnitude overflow */
++	    return TRUE;
++	  }
++	  st += 1;
++	}
++      }
++      /* Section F.1.4.4.1.2: Establish dc_context conditioning category */
++      if (m < (int) (((INT32) 1 << cinfo->arith_dc_L[tbl]) >> 1))
++	entropy->dc_context[ci] = 0;		   /* zero diff category */
++      else if (m > (int) (((INT32) 1 << cinfo->arith_dc_U[tbl]) >> 1))
++	entropy->dc_context[ci] = 12 + (sign * 4); /* large diff category */
++      else
++	entropy->dc_context[ci] = 4 + (sign * 4);  /* small diff category */
++      v = m;
++      /* Figure F.24: Decoding the magnitude bit pattern of v */
++      st += 14;
++      while (m >>= 1)
++	if (arith_decode(cinfo, st)) v |= m;
++      v += 1; if (sign) v = -v;
++      entropy->last_dc_val[ci] += v;
++    }
++
++    (*block)[0] = (JCOEF) entropy->last_dc_val[ci];
++
++    /* Sections F.2.4.2 & F.1.4.4.2: Decoding of AC coefficients */
++
++    tbl = compptr->ac_tbl_no;
++
++    /* Figure F.20: Decode_AC_coefficients */
++    for (k = 1; k < DCTSIZE2; k++) {
++      st = entropy->ac_stats[tbl] + 3 * (k - 1);
++      if (arith_decode(cinfo, st)) break;	/* EOB flag */
++      while (arith_decode(cinfo, st + 1) == 0) {
++	st += 3; k++;
++	if (k >= DCTSIZE2) {
++	  WARNMS(cinfo, JWRN_ARITH_BAD_CODE);
++	  entropy->ct = -1;			/* spectral overflow */
++	  return TRUE;
++	}
++      }
++      /* Figure F.21: Decoding nonzero value v */
++      /* Figure F.22: Decoding the sign of v */
++      entropy->ac_stats[tbl][245] = 0;
++      sign = arith_decode(cinfo, entropy->ac_stats[tbl] + 245);
++      st += 2;
++      /* Figure F.23: Decoding the magnitude category of v */
++      if ((m = arith_decode(cinfo, st)) != 0) {
++	if (arith_decode(cinfo, st)) {
++	  m <<= 1;
++	  st = entropy->ac_stats[tbl] +
++	       (k <= cinfo->arith_ac_K[tbl] ? 189 : 217);
++	  while (arith_decode(cinfo, st)) {
++	    if ((m <<= 1) == 0x8000) {
++	      WARNMS(cinfo, JWRN_ARITH_BAD_CODE);
++	      entropy->ct = -1;			/* magnitude overflow */
++	      return TRUE;
++	    }
++	    st += 1;
++	  }
++	}
++      }
++      v = m;
++      /* Figure F.24: Decoding the magnitude bit pattern of v */
++      st += 14;
++      while (m >>= 1)
++	if (arith_decode(cinfo, st)) v |= m;
++      v += 1; if (sign) v = -v;
++      (*block)[jpeg_natural_order[k]] = (JCOEF) v;
++    }
++  }
++
++  return TRUE;
++}
++
++
++/*
++ * Initialize for an arithmetic-compressed scan.
++ */
++
++METHODDEF(void)
++start_pass (j_decompress_ptr cinfo)
++{
++  arith_entropy_ptr entropy = (arith_entropy_ptr) cinfo->entropy;
++  int ci, tbl;
++  jpeg_component_info * compptr;
++
++  if (cinfo->progressive_mode) {
++    /* Validate progressive scan parameters */
++    if (cinfo->Ss == 0) {
++      if (cinfo->Se != 0)
++	goto bad;
++    } else {
++      /* need not check Ss/Se < 0 since they came from unsigned bytes */
++      if (cinfo->Se < cinfo->Ss || cinfo->Se >= DCTSIZE2)
++	goto bad;
++      /* AC scans may have only one component */
++      if (cinfo->comps_in_scan != 1)
++	goto bad;
++    }
++    if (cinfo->Ah != 0) {
++      /* Successive approximation refinement scan: must have Al = Ah-1. */
++      if (cinfo->Ah-1 != cinfo->Al)
++	goto bad;
++    }
++    if (cinfo->Al > 13) {	/* need not check for < 0 */
++      bad:
++      ERREXIT4(cinfo, JERR_BAD_PROGRESSION,
++	       cinfo->Ss, cinfo->Se, cinfo->Ah, cinfo->Al);
++    }
++    /* Update progression status, and verify that scan order is legal.
++     * Note that inter-scan inconsistencies are treated as warnings
++     * not fatal errors ... not clear if this is right way to behave.
++     */
++    for (ci = 0; ci < cinfo->comps_in_scan; ci++) {
++      int coefi, cindex = cinfo->cur_comp_info[ci]->component_index;
++      int *coef_bit_ptr = & cinfo->coef_bits[cindex][0];
++      if (cinfo->Ss && coef_bit_ptr[0] < 0) /* AC without prior DC scan */
++	WARNMS2(cinfo, JWRN_BOGUS_PROGRESSION, cindex, 0);
++      for (coefi = cinfo->Ss; coefi <= cinfo->Se; coefi++) {
++	int expected = (coef_bit_ptr[coefi] < 0) ? 0 : coef_bit_ptr[coefi];
++	if (cinfo->Ah != expected)
++	  WARNMS2(cinfo, JWRN_BOGUS_PROGRESSION, cindex, coefi);
++	coef_bit_ptr[coefi] = cinfo->Al;
++      }
++    }
++    /* Select MCU decoding routine */
++    if (cinfo->Ah == 0) {
++      if (cinfo->Ss == 0)
++	entropy->pub.decode_mcu = decode_mcu_DC_first;
++      else
++	entropy->pub.decode_mcu = decode_mcu_AC_first;
++    } else {
++      if (cinfo->Ss == 0)
++	entropy->pub.decode_mcu = decode_mcu_DC_refine;
++      else
++	entropy->pub.decode_mcu = decode_mcu_AC_refine;
++    }
++  } else {
++    /* Check that the scan parameters Ss, Se, Ah/Al are OK for sequential JPEG.
++     * This ought to be an error condition, but we make it a warning because
++     * there are some baseline files out there with all zeroes in these bytes.
++     */
++    if (cinfo->Ss != 0 || cinfo->Se != DCTSIZE2-1 ||
++	cinfo->Ah != 0 || cinfo->Al != 0)
++      WARNMS(cinfo, JWRN_NOT_SEQUENTIAL);
++    /* Select MCU decoding routine */
++    entropy->pub.decode_mcu = decode_mcu;
++  }
++
++  for (ci = 0; ci < cinfo->comps_in_scan; ci++) {
++    compptr = cinfo->cur_comp_info[ci];
++    /* Allocate & initialize requested statistics areas */
++    if (cinfo->progressive_mode == 0 || (cinfo->Ss == 0 && cinfo->Ah == 0)) {
++      tbl = compptr->dc_tbl_no;
++      if (tbl < 0 || tbl >= NUM_ARITH_TBLS)
++	ERREXIT1(cinfo, JERR_NO_ARITH_TABLE, tbl);
++      if (entropy->dc_stats[tbl] == NULL)
++	entropy->dc_stats[tbl] = (unsigned char *) (*cinfo->mem->alloc_small)
++	  ((j_common_ptr) cinfo, JPOOL_IMAGE, DC_STAT_BINS);
++      MEMZERO(entropy->dc_stats[tbl], DC_STAT_BINS);
++      /* Initialize DC predictions to 0 */
++      entropy->last_dc_val[ci] = 0;
++      entropy->dc_context[ci] = 0;
++    }
++    if (cinfo->progressive_mode == 0 || cinfo->Ss) {
++      tbl = compptr->ac_tbl_no;
++      if (tbl < 0 || tbl >= NUM_ARITH_TBLS)
++	ERREXIT1(cinfo, JERR_NO_ARITH_TABLE, tbl);
++      if (entropy->ac_stats[tbl] == NULL)
++	entropy->ac_stats[tbl] = (unsigned char *) (*cinfo->mem->alloc_small)
++	  ((j_common_ptr) cinfo, JPOOL_IMAGE, AC_STAT_BINS);
++      MEMZERO(entropy->ac_stats[tbl], AC_STAT_BINS);
++    }
++  }
++
++  /* Initialize arithmetic decoding variables */
++  entropy->c = 0;
++  entropy->a = 0;
++  entropy->ct = -16;	/* force reading 2 initial bytes to fill C */
++
++  /* Initialize restart counter */
++  entropy->restarts_to_go = cinfo->restart_interval;
++}
++
++
++/*
++ * Module initialization routine for arithmetic entropy decoding.
++ */
++
++GLOBAL(void)
++jinit_arith_decoder (j_decompress_ptr cinfo)
++{
++  arith_entropy_ptr entropy;
++  int i;
++
++  entropy = (arith_entropy_ptr)
++    (*cinfo->mem->alloc_small) ((j_common_ptr) cinfo, JPOOL_IMAGE,
++				SIZEOF(arith_entropy_decoder));
++  cinfo->entropy = (struct jpeg_entropy_decoder *) entropy;
++  entropy->pub.start_pass = start_pass;
++
++  /* Mark tables unallocated */
++  for (i = 0; i < NUM_ARITH_TBLS; i++) {
++    entropy->dc_stats[i] = NULL;
++    entropy->ac_stats[i] = NULL;
++  }
++
++  if (cinfo->progressive_mode) {
++    /* Create progression status table */
++    int *coef_bit_ptr, ci;
++    cinfo->coef_bits = (int (*)[DCTSIZE2])
++      (*cinfo->mem->alloc_small) ((j_common_ptr) cinfo, JPOOL_IMAGE,
++				  cinfo->num_components*DCTSIZE2*SIZEOF(int));
++    coef_bit_ptr = & cinfo->coef_bits[0][0];
++    for (ci = 0; ci < cinfo->num_components; ci++) 
++      for (i = 0; i < DCTSIZE2; i++)
++	*coef_bit_ptr++ = -1;
++  }
++}
+diff --git a/jdmaster.c b/jdmaster.c
+index 8314b67..537abc7 100644
+--- a/jdmaster.c
++++ b/jdmaster.c
+@@ -384,7 +384,7 @@ master_selection (j_decompress_ptr cinfo)
+   jinit_inverse_dct(cinfo);
+   /* Entropy decoding: either Huffman or arithmetic coding. */
+   if (cinfo->arith_code) {
+-    ERREXIT(cinfo, JERR_ARITH_NOTIMPL);
++    jinit_arith_decoder(cinfo);
+   } else {
+     if (cinfo->progressive_mode) {
+ #ifdef D_PROGRESSIVE_SUPPORTED
+diff --git a/jdtrans.c b/jdtrans.c
+index 6c0ab71..fcc9ae9 100644
+--- a/jdtrans.c
++++ b/jdtrans.c
+@@ -101,7 +101,7 @@ transdecode_master_selection (j_decompress_ptr cinfo)
+ 
+   /* Entropy decoding: either Huffman or arithmetic coding. */
+   if (cinfo->arith_code) {
+-    ERREXIT(cinfo, JERR_ARITH_NOTIMPL);
++    jinit_arith_decoder(cinfo);
+   } else {
+     if (cinfo->progressive_mode) {
+ #ifdef D_PROGRESSIVE_SUPPORTED
+diff --git a/jerror.h b/jerror.h
+index fc2fffe..109e3d3 100644
+--- a/jerror.h
++++ b/jerror.h
+@@ -93,6 +93,7 @@ JMESSAGE(JERR_MISSING_DATA, "Scan script does not transmit all data")
+ JMESSAGE(JERR_MODE_CHANGE, "Invalid color quantization mode change")
+ JMESSAGE(JERR_NOTIMPL, "Not implemented yet")
+ JMESSAGE(JERR_NOT_COMPILED, "Requested feature was omitted at compile time")
++JMESSAGE(JERR_NO_ARITH_TABLE, "Arithmetic table 0x%02x was not defined")
+ JMESSAGE(JERR_NO_BACKING_STORE, "Backing store not supported")
+ JMESSAGE(JERR_NO_HUFF_TABLE, "Huffman table 0x%02x was not defined")
+ JMESSAGE(JERR_NO_IMAGE, "JPEG datastream contains no image")
+@@ -170,6 +171,7 @@ JMESSAGE(JTRC_UNKNOWN_IDS,
+ JMESSAGE(JTRC_XMS_CLOSE, "Freed XMS handle %u")
+ JMESSAGE(JTRC_XMS_OPEN, "Obtained XMS handle %u")
+ JMESSAGE(JWRN_ADOBE_XFORM, "Unknown Adobe color transform code %d")
++JMESSAGE(JWRN_ARITH_BAD_CODE, "Corrupt JPEG data: bad arithmetic code")
+ JMESSAGE(JWRN_BOGUS_PROGRESSION,
+ 	 "Inconsistent progression sequence for component %d coefficient %d")
+ JMESSAGE(JWRN_EXTRANEOUS_DATA,
+diff --git a/jmorecfg.h b/jmorecfg.h
+index 0e7fb72..4d66335 100644
+--- a/jmorecfg.h
++++ b/jmorecfg.h
+@@ -283,7 +283,7 @@ typedef int boolean;
+ 
+ /* Decoder capability options: */
+ 
+-#undef  D_ARITH_CODING_SUPPORTED    /* Arithmetic coding back end? */
++#define D_ARITH_CODING_SUPPORTED    /* Arithmetic coding back end? */
+ #define D_MULTISCAN_FILES_SUPPORTED /* Multiple-scan JPEG files? */
+ #define D_PROGRESSIVE_SUPPORTED	    /* Progressive JPEG? (Requires MULTISCAN)*/
+ #define SAVE_MARKERS_SUPPORTED	    /* jpeg_save_markers() needed? */
+diff --git a/jpegint.h b/jpegint.h
+index 7a31f51..78bb1cf 100644
+--- a/jpegint.h
++++ b/jpegint.h
+@@ -313,6 +313,7 @@ struct jpeg_color_quantizer {
+ #define jinit_marker_reader	jIMReader
+ #define jinit_huff_decoder	jIHDecoder
+ #define jinit_phuff_decoder	jIPHDecoder
++#define jinit_arith_decoder	jIADecoder
+ #define jinit_inverse_dct	jIIDCT
+ #define jinit_upsampler		jIUpsampler
+ #define jinit_color_deconverter	jIDColor
+@@ -358,6 +359,7 @@ EXTERN(void) jinit_input_controller JPP((j_decompress_ptr cinfo));
+ EXTERN(void) jinit_marker_reader JPP((j_decompress_ptr cinfo));
+ EXTERN(void) jinit_huff_decoder JPP((j_decompress_ptr cinfo));
+ EXTERN(void) jinit_phuff_decoder JPP((j_decompress_ptr cinfo));
++EXTERN(void) jinit_arith_decoder JPP((j_decompress_ptr cinfo));
+ EXTERN(void) jinit_inverse_dct JPP((j_decompress_ptr cinfo));
+ EXTERN(void) jinit_upsampler JPP((j_decompress_ptr cinfo));
+ EXTERN(void) jinit_color_deconverter JPP((j_decompress_ptr cinfo));
+-- 
+1.7.2.3
+
