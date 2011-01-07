@@ -3,13 +3,12 @@
 %define	libjpeg_ver	6b
 Summary:	A MMX/SSE2 accelerated library for manipulating JPEG image files
 Name:		libjpeg-turbo
-Version:	1.0.1
+Version:	1.0.90
 Release:	1
 License:	wxWidgets
 Group:		Libraries
-Source0:	http://downloads.sourceforge.net/project/libjpeg-turbo/%{version}/%{name}-%{version}.tar.gz
-# Source0-md5:	e94b72694c9afd716458367dfe84ce1e
-Patch0:		%{name}10-rh639672.patch
+Source0:	http://downloads.sourceforge.net/project/libjpeg-turbo/%{version}%20(1.1beta1)/%{name}-%{version}.tar.gz
+# Source0-md5:	9dafc998ef7662b6cf78337afde4a8bf
 URL:		http://libjpeg-turbo.virtualgl.org/
 BuildRequires:	libtool
 Provides:	libjpeg = %{libjpeg_ver}
@@ -136,7 +135,6 @@ tekstowe dołączone do pliku JPEG, a wrjpgcom wstawia takie komentarze.
 
 %prep
 %setup -q
-%patch0 -p1
 
 %build
 %{__libtoolize}
@@ -146,7 +144,8 @@ tekstowe dołączone do pliku JPEG, a wrjpgcom wstawia takie komentarze.
 
 %configure \
 	--enable-shared \
-	--enable-static
+	--enable-static \
+	--with-jpeg8
 
 %{__make}
 
@@ -171,7 +170,7 @@ rm -rf $RPM_BUILD_ROOT
 %defattr(644,root,root,755)
 %doc README change.log
 %attr(755,root,root) %{_libdir}/libjpeg.so.*.*.*
-%attr(755,root,root) %ghost %{_libdir}/libjpeg.so.62
+%attr(755,root,root) %ghost %{_libdir}/libjpeg.so.8
 
 %files devel
 %defattr(644,root,root,755)
