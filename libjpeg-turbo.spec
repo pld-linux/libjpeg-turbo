@@ -7,7 +7,7 @@ Version:	1.0.90
 Release:	1
 License:	wxWidgets
 Group:		Libraries
-Source0:	http://downloads.sourceforge.net/project/libjpeg-turbo/%{version}%20(1.1beta1)/%{name}-%{version}.tar.gz
+Source0:	http://downloads.sourceforge.net/project/libjpeg-turbo/%{version}%20%281.1beta1%29/%{name}-%{version}.tar.gz
 # Source0-md5:	9dafc998ef7662b6cf78337afde4a8bf
 URL:		http://libjpeg-turbo.virtualgl.org/
 BuildRequires:	autoconf
