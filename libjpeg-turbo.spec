@@ -10,13 +10,14 @@ Group:		Libraries
 Source0:	http://downloads.sourceforge.net/project/libjpeg-turbo/%{version}%20(1.1beta1)/%{name}-%{version}.tar.gz
 # Source0-md5:	9dafc998ef7662b6cf78337afde4a8bf
 URL:		http://libjpeg-turbo.virtualgl.org/
-BuildRequires:	libtool
-Provides:	libjpeg = %{libjpeg_ver}
-Obsoletes:	libjpeg
-BuildRequires:	libtool
 BuildRequires:	autoconf
 BuildRequires:	automake
+BuildRequires:	libstdc++-devel
+BuildRequires:	libtool
+BuildRequires:	libtool
 BuildRequires:	nasm
+Provides:	libjpeg = %{libjpeg_ver}
+Obsoletes:	libjpeg
 BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
 
 %description
