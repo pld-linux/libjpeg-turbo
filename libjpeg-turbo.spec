@@ -4,7 +4,7 @@
 Summary:	A MMX/SSE2 accelerated library for manipulating JPEG image files
 Name:		libjpeg-turbo
 Version:	1.1.0
-Release:	1
+Release:	2
 License:	wxWidgets
 Group:		Libraries
 Source0:	http://downloads.sourceforge.net/project/libjpeg-turbo/%{version}/%{name}-%{version}.tar.gz
@@ -158,6 +158,8 @@ rm -rf $RPM_BUILD_ROOT
 %{__make} install \
 	DESTDIR=$RPM_BUILD_ROOT
 
+# libjpegturbo is unversioned, so we drop it
+rm $RPM_BUILD_ROOT%{_bindir}/jpgtest
 rm $RPM_BUILD_ROOT%{_includedir}/turbojpeg.h
 rm $RPM_BUILD_ROOT%{_libdir}/libturbojpeg.*
 
@@ -191,7 +193,6 @@ rm -rf $RPM_BUILD_ROOT
 %attr(755,root,root) %{_bindir}/cjpeg
 %attr(755,root,root) %{_bindir}/djpeg
 %attr(755,root,root) %{_bindir}/jpegtran
-%attr(755,root,root) %{_bindir}/jpgtest
 %attr(755,root,root) %{_bindir}/rdjpgcom
 %attr(755,root,root) %{_bindir}/wrjpgcom
 %{_mandir}/man1/cjpeg.1*
