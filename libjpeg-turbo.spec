@@ -2,13 +2,14 @@
 #
 %define	libjpeg_ver	8c
 Summary:	A MMX/SSE2 accelerated library for manipulating JPEG image files
+Summary(pl.UTF-8):	Biblioteka do obróbki plików obrazów JPEG z akceleracją MMX/SSE2
 Name:		libjpeg-turbo
-Version:	1.1.0
-Release:	3
+Version:	1.1.1
+Release:	1
 License:	wxWidgets
 Group:		Libraries
-Source0:	http://downloads.sourceforge.net/project/libjpeg-turbo/%{version}/%{name}-%{version}.tar.gz
-# Source0-md5:	83e6914a281d649ad289445dc20f9de4
+Source0:	http://downloads.sourceforge.net/libjpeg-turbo/%{name}-%{version}.tar.gz
+# Source0-md5:	03b9c1406c7bfdc204313c2917ce6962
 URL:		http://libjpeg-turbo.virtualgl.org/
 BuildRequires:	autoconf
 BuildRequires:	automake
@@ -26,8 +27,15 @@ SIMD instructions to accelerate baseline JPEG
 compression/decompression by about 2-4x on x86 and x86-64 platforms.
 It is based on libjpeg/SIMD but has numerous enhancements.
 
+%description -l pl.UTF-8
+libjpeg-turbo to wersja biblioteki libjpeg, wykorzystująca instrukcje
+SIMD MMX, SSE i SSE2 w celu przyspieszenia kompresji/dekompresji JPEG
+o około 2-4 razy na platformach x86 i x86-64. Jest oparta na
+libjpeg/SIMD, ale ma wiele rozszerzeń.
+
 %package devel
 Summary:	Headers for developing programs using libjpeg-turbo
+Summary(pl.UTF-8):	Pliki nagłówkowe do tworzenia programów przy użyciu libjpeg-turbo
 Group:		Development/Libraries
 Requires:	%{name} = %{version}-%{release}
 Provides:	libjpeg-devel = %{libjpeg_ver}
@@ -41,24 +49,23 @@ libjpeg-turbo library.
 
 %description devel -l de.UTF-8
 Dieses Paket bietet alles, was Sie brauchen, um Programme zur
-Manipulation von JPEG-Grafiken, einschließlich Dokumentation, zu
-entwickeln.
+Manipulation von JPEG-Grafiken, zu entwickeln.
 
 %description devel -l es.UTF-8
 Este paquete es todo lo que necesitas para desarrollar programas que
-manipulen imágenes JPEG, incluso documentación.
+manipulen imágenes JPEG.
 
 %description devel -l fr.UTF-8
 Ce package est tout ce dont vous avez besoin pour développer des
-programmes manipulant des images JPEG, et comprend la documentation.
+programmes manipulant des images JPEG.
 
 %description devel -l pl.UTF-8
 Ten pakiet zawiera pliki potrzebne do programowania z wykorzystaniem
-biblioteki libjpeg-turbo. Zawiera także dokumentację.
+biblioteki libjpeg-turbo.
 
 %description devel -l pt_BR.UTF-8
 Este pacote é tudo que você precisa para desenvolver programas que
-manipulam imagens JPEG, incluindo documentação.
+manipulam imagens JPEG.
 
 %description devel -l ru.UTF-8
 В этом пакете содержится все необходимое для разработки программ,
@@ -158,10 +165,10 @@ rm -rf $RPM_BUILD_ROOT
 %{__make} install \
 	DESTDIR=$RPM_BUILD_ROOT
 
-# libjpegturbo is unversioned, so we drop it
-rm $RPM_BUILD_ROOT%{_bindir}/jpgtest
-rm $RPM_BUILD_ROOT%{_includedir}/turbojpeg.h
-rm $RPM_BUILD_ROOT%{_libdir}/libturbojpeg.*
+# libturbojpeg is unversioned, so we drop it
+%{__rm} $RPM_BUILD_ROOT%{_bindir}/jpgtest
+%{__rm} $RPM_BUILD_ROOT%{_includedir}/turbojpeg.h
+%{__rm} $RPM_BUILD_ROOT%{_libdir}/libturbojpeg.*
 
 %clean
 rm -rf $RPM_BUILD_ROOT
