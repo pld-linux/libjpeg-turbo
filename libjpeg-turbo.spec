@@ -5,12 +5,13 @@ Summary:	A MMX/SSE2 accelerated library for manipulating JPEG image files
 Summary(pl.UTF-8):	Biblioteka do obróbki plików obrazów JPEG z akceleracją MMX/SSE2
 Name:		libjpeg-turbo
 Version:	1.1.1
-Release:	1
+Release:	2
 License:	wxWidgets
 Group:		Libraries
 Source0:	http://downloads.sourceforge.net/libjpeg-turbo/%{name}-%{version}.tar.gz
 # Source0-md5:	03b9c1406c7bfdc204313c2917ce6962
 URL:		http://libjpeg-turbo.virtualgl.org/
+Patch0:		%{name}-turbojpeg.patch
 BuildRequires:	autoconf
 BuildRequires:	automake
 BuildRequires:	libstdc++-devel
@@ -143,6 +144,7 @@ tekstowe dołączone do pliku JPEG, a wrjpgcom wstawia takie komentarze.
 
 %prep
 %setup -q
+%patch0 -p1
 
 %build
 %{__libtoolize}
@@ -165,11 +167,6 @@ rm -rf $RPM_BUILD_ROOT
 %{__make} install \
 	DESTDIR=$RPM_BUILD_ROOT
 
-# libturbojpeg is unversioned, so we drop it
-%{__rm} $RPM_BUILD_ROOT%{_bindir}/jpgtest
-%{__rm} $RPM_BUILD_ROOT%{_includedir}/turbojpeg.h
-%{__rm} $RPM_BUILD_ROOT%{_libdir}/libturbojpeg.*
-
 %clean
 rm -rf $RPM_BUILD_ROOT
 
@@ -181,25 +178,32 @@ rm -rf $RPM_BUILD_ROOT
 %doc README change.log
 %attr(755,root,root) %{_libdir}/libjpeg.so.*.*.*
 %attr(755,root,root) %ghost %{_libdir}/libjpeg.so.8
+%attr(755,root,root) %{_libdir}/libturbojpeg.so.*.*.*
+%attr(755,root,root) %ghost %{_libdir}/libturbojpeg.so.0
 
 %files devel
 %defattr(644,root,root,755)
 %attr(755,root,root) %{_libdir}/libjpeg.so
+%attr(755,root,root) %{_libdir}/libturbojpeg.so
 %{_libdir}/libjpeg.la
+%{_libdir}/libturbojpeg.la
 %{_includedir}/jconfig.h
 %{_includedir}/jerror.h
 %{_includedir}/jmorecfg.h
 %{_includedir}/jpeglib.h
+%{_includedir}/turbojpeg.h
 
 %files static
 %defattr(644,root,root,755)
 %{_libdir}/libjpeg.a
+%{_libdir}/libturbojpeg.a
 
 %files progs
 %defattr(644,root,root,755)
 %attr(755,root,root) %{_bindir}/cjpeg
 %attr(755,root,root) %{_bindir}/djpeg
 %attr(755,root,root) %{_bindir}/jpegtran
+%attr(755,root,root) %{_bindir}/jpgtest
 %attr(755,root,root) %{_bindir}/rdjpgcom
 %attr(755,root,root) %{_bindir}/wrjpgcom
 %{_mandir}/man1/cjpeg.1*
