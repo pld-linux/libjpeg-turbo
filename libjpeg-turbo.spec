@@ -4,12 +4,12 @@
 Summary:	A MMX/SSE2 accelerated library for manipulating JPEG image files
 Summary(pl.UTF-8):	Biblioteka do obróbki plików obrazów JPEG z akceleracją MMX/SSE2
 Name:		libjpeg-turbo
-Version:	1.2.0
+Version:	1.2.1
 Release:	1
 License:	wxWidgets
 Group:		Libraries
 Source0:	http://downloads.sourceforge.net/libjpeg-turbo/%{name}-%{version}.tar.gz
-# Source0-md5:	5329fa80953938cb4f097afae55059e2
+# Source0-md5:	f61e60ff01381ece4d2fe65eeb52669e
 URL:		http://libjpeg-turbo.virtualgl.org/
 Patch0:		%{name}-turbojpeg.patch
 BuildRequires:	autoconf
