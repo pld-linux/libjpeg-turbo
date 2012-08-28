@@ -10,12 +10,11 @@ License:	wxWidgets
 Group:		Libraries
 Source0:	http://downloads.sourceforge.net/libjpeg-turbo/%{name}-%{version}.tar.gz
 # Source0-md5:	f61e60ff01381ece4d2fe65eeb52669e
-URL:		http://libjpeg-turbo.virtualgl.org/
 Patch0:		%{name}-turbojpeg.patch
-BuildRequires:	autoconf
+URL:		http://libjpeg-turbo.virtualgl.org/
+BuildRequires:	autoconf >= 2.56
 BuildRequires:	automake
 BuildRequires:	libstdc++-devel
-BuildRequires:	libtool
 BuildRequires:	libtool
 BuildRequires:	nasm
 Provides:	libjpeg = %{libjpeg_ver}
