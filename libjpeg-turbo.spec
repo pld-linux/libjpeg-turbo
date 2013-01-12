@@ -1,5 +1,8 @@
-%bcond_without	tests
-
+#
+# Conditional build
+%bcond_without	tests	# don't perform "make test"
+%bcond_without	java	# Java binding
+#
 %define		libjpeg_ver	8c
 Summary:	A MMX/SSE2 accelerated library for manipulating JPEG image files
 Summary(pl.UTF-8):	Biblioteka do obróbki plików obrazów JPEG z akceleracją MMX/SSE2
@@ -14,9 +17,13 @@ Patch0:		%{name}-turbojpeg.patch
 URL:		http://libjpeg-turbo.virtualgl.org/
 BuildRequires:	autoconf >= 2.56
 BuildRequires:	automake
+%{?with_java:BuildRequires:	jdk}
 BuildRequires:	libstdc++-devel
 BuildRequires:	libtool
+# x86* SIMD code uses NASM; arm uses gas, no SIMD code for other archs
+%ifarch %{ix86} %{x8664}
 BuildRequires:	nasm
+%endif
 Provides:	libjpeg = %{libjpeg_ver}
 Obsoletes:	libjpeg >= %{libjpeg_ver}
 BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
@@ -141,6 +148,19 @@ zwykłego pliku obrazu, jpegtran potrafi wykonywać różne
 przekształcenia na plikach JPEG. rdjpgcom wyświetla komentarze
 tekstowe dołączone do pliku JPEG, a wrjpgcom wstawia takie komentarze.
 
+%package -n java-turbojpeg
+Summary:	Java wrapper for the TurboJPEG/OSS library
+Summary(pl.UTF-8):	Interfejs Javy do biblioteki TurboJPEG/OSS
+Group:		Development/Languages/Java
+Requires:	%{name} = %{version}-%{release}
+Requires:	jpackage-utils
+
+%description -n java-turbojpeg
+Java wrapper for the TurboJPEG/OSS library.
+
+%description -n java-turbojpeg -l pl.UTF-8
+Interfejs Javy do biblioteki TurboJPEG/OSS.
+
 %prep
 %setup -q
 %patch0 -p1
@@ -152,8 +172,10 @@ tekstowe dołączone do pliku JPEG, a wrjpgcom wstawia takie komentarze.
 %{__automake}
 
 %configure \
+	%{?with_java:JNI_CFLAGS="-I%{_jvmdir}/java/include -I%{_jvmdir}/java/include/linux"} \
 	--enable-shared \
 	--enable-static \
+	%{?with_java:--with-java} \
 	--with-jpeg8
 
 %{__make}
@@ -165,6 +187,11 @@ rm -rf $RPM_BUILD_ROOT
 
 %{__make} install \
 	DESTDIR=$RPM_BUILD_ROOT
+
+%if %{with java}
+install -d $RPM_BUILD_ROOT%{_javadir}
+%{__mv} $RPM_BUILD_ROOT%{_prefix}/classes/turbojpeg.jar $RPM_BUILD_ROOT%{_javadir}
+%endif
 
 %clean
 rm -rf $RPM_BUILD_ROOT
@@ -210,3 +237,10 @@ rm -rf $RPM_BUILD_ROOT
 %{_mandir}/man1/jpegtran.1*
 %{_mandir}/man1/rdjpgcom.1*
 %{_mandir}/man1/wrjpgcom.1*
+
+%if %{with java}
+%files -n java-turbojpeg
+%defattr(644,root,root,755)
+%doc java/doc/*
+%{_javadir}/turbojpeg.jar
+%endif
