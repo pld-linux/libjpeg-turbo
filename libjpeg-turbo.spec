@@ -26,6 +26,7 @@ BuildRequires:	nasm
 %endif
 Provides:	libjpeg = %{libjpeg_ver}
 Obsoletes:	libjpeg >= %{libjpeg_ver}
+Obsoletes:	libjpegsimd
 BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
 
 %description
@@ -47,6 +48,7 @@ Group:		Development/Libraries
 Requires:	%{name} = %{version}-%{release}
 Provides:	libjpeg-devel = %{libjpeg_ver}
 Obsoletes:	libjpeg-devel >= %{libjpeg_ver}
+Obsoletes:	libjpegsimd-devel
 Conflicts:	libjpeg6-devel
 
 %description devel
@@ -97,6 +99,7 @@ Group:		Development/Libraries
 Requires:	%{name}-devel = %{version}-%{release}
 Provides:	libjpeg-static = %{libjpeg_ver}
 Obsoletes:	libjpeg-static >= %{libjpeg_ver}
+Obsoletes:	libjpegsimd-static
 Conflicts:	libjpeg-turbo6-static
 
 %description static
@@ -125,6 +128,7 @@ Group:		Development/Libraries
 Requires:	%{name} = %{version}-%{release}
 Provides:	libjpeg-progs = %{libjpeg_ver}
 Obsoletes:	libjpeg-progs >= %{libjpeg_ver}
+Obsoletes:	libjpegsimd-progs
 Conflicts:	libjpeg-turbo6-progs
 
 %description progs
