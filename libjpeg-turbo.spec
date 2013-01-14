@@ -36,7 +36,7 @@ compression/decompression by about 2-4x on x86 and x86-64 platforms.
 It is based on libjpeg/SIMD but has numerous enhancements.
 
 %description -l pl.UTF-8
-libjpeg-turbo to wersja biblioteki libjpeg, wykorzystująca instrukcje
+libjpeg-turbo to wersja biblioteki libjpeg wykorzystująca instrukcje
 SIMD MMX, SSE i SSE2 w celu przyspieszenia kompresji/dekompresji JPEG
 o około 2-4 razy na platformach x86 i x86-64. Jest oparta na
 libjpeg/SIMD, ale ma wiele rozszerzeń.
