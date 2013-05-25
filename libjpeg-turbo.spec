@@ -4,11 +4,12 @@
 %bcond_without	java	# Java binding
 #
 %define		libjpeg_ver	8c
+%define		libjpeg_ver_lt	9-1
 Summary:	A MMX/SSE2 accelerated library for manipulating JPEG image files
 Summary(pl.UTF-8):	Biblioteka do obróbki plików obrazów JPEG z akceleracją MMX/SSE2
 Name:		libjpeg-turbo
 Version:	1.2.1
-Release:	1
+Release:	2
 License:	wxWidgets
 Group:		Libraries
 Source0:	http://downloads.sourceforge.net/libjpeg-turbo/%{name}-%{version}.tar.gz
@@ -25,7 +26,7 @@ BuildRequires:	libtool
 BuildRequires:	nasm
 %endif
 Provides:	libjpeg = %{libjpeg_ver}
-Obsoletes:	libjpeg >= %{libjpeg_ver}
+Obsoletes:	libjpeg < %{libjpeg_ver_lt}
 Obsoletes:	libjpegsimd
 BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
 
@@ -47,7 +48,7 @@ Summary(pl.UTF-8):	Pliki nagłówkowe do tworzenia programów przy użyciu libjp
 Group:		Development/Libraries
 Requires:	%{name} = %{version}-%{release}
 Provides:	libjpeg-devel = %{libjpeg_ver}
-Obsoletes:	libjpeg-devel >= %{libjpeg_ver}
+Obsoletes:	libjpeg-devel < %{libjpeg_ver_lt}
 Obsoletes:	libjpegsimd-devel
 Conflicts:	libjpeg6-devel
 
@@ -98,7 +99,7 @@ Summary(uk.UTF-8):	Статична бібліотека для програму
 Group:		Development/Libraries
 Requires:	%{name}-devel = %{version}-%{release}
 Provides:	libjpeg-static = %{libjpeg_ver}
-Obsoletes:	libjpeg-static >= %{libjpeg_ver}
+Obsoletes:	libjpeg-static < %{libjpeg_ver_lt}
 Obsoletes:	libjpegsimd-static
 Conflicts:	libjpeg-turbo6-static
 
@@ -127,7 +128,7 @@ Summary(pl.UTF-8):	Kilka prostych programów do manipulowania na plikach JPEG
 Group:		Development/Libraries
 Requires:	%{name} = %{version}-%{release}
 Provides:	libjpeg-progs = %{libjpeg_ver}
-Obsoletes:	libjpeg-progs >= %{libjpeg_ver}
+Obsoletes:	libjpeg-progs < %{libjpeg_ver_lt}
 Obsoletes:	libjpegsimd-progs
 Conflicts:	libjpeg-turbo6-progs
 
