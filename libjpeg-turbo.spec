@@ -8,13 +8,12 @@
 Summary:	A MMX/SSE2 accelerated library for manipulating JPEG image files
 Summary(pl.UTF-8):	Biblioteka do obróbki plików obrazów JPEG z akceleracją MMX/SSE2
 Name:		libjpeg-turbo
-Version:	1.2.1
-Release:	2
+Version:	1.3.0
+Release:	1
 License:	wxWidgets
 Group:		Libraries
 Source0:	http://downloads.sourceforge.net/libjpeg-turbo/%{name}-%{version}.tar.gz
-# Source0-md5:	f61e60ff01381ece4d2fe65eeb52669e
-Patch0:		%{name}-turbojpeg.patch
+# Source0-md5:	e1e65cc711a1ade1322c06ad4a647741
 URL:		http://libjpeg-turbo.virtualgl.org/
 BuildRequires:	autoconf >= 2.56
 BuildRequires:	automake
@@ -168,7 +167,6 @@ Interfejs Javy do biblioteki TurboJPEG/OSS.
 
 %prep
 %setup -q
-%patch0 -p1
 
 %build
 %{__libtoolize}
@@ -195,7 +193,7 @@ rm -rf $RPM_BUILD_ROOT
 
 %if %{with java}
 install -d $RPM_BUILD_ROOT%{_javadir}
-%{__mv} $RPM_BUILD_ROOT%{_prefix}/classes/turbojpeg.jar $RPM_BUILD_ROOT%{_javadir}
+%{__mv} $RPM_BUILD_ROOT%{_datadir}/classes/turbojpeg.jar $RPM_BUILD_ROOT%{_javadir}
 %endif
 
 %clean
