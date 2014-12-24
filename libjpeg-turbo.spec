@@ -179,6 +179,9 @@ Interfejs Javy do biblioteki TurboJPEG/OSS.
 	--enable-shared \
 	--enable-static \
 	%{?with_java:--with-java} \
+%ifnarch %{ix86} %{x8664}
+	--without-simd \
+%endif
 	--with-jpeg8
 
 %{__make} -j1
