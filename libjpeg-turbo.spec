@@ -8,12 +8,12 @@
 Summary:	A MMX/SSE2 accelerated library for manipulating JPEG image files
 Summary(pl.UTF-8):	Biblioteka do obróbki plików obrazów JPEG z akceleracją MMX/SSE2
 Name:		libjpeg-turbo
-Version:	1.4.2
+Version:	1.5.0
 Release:	1
 License:	wxWidgets
 Group:		Libraries
 Source0:	http://downloads.sourceforge.net/libjpeg-turbo/%{name}-%{version}.tar.gz
-# Source0-md5:	86b0d5f7507c2e6c21c00219162c3c44
+# Source0-md5:	3fc5d9b6a8bce96161659ae7a9939257
 URL:		http://libjpeg-turbo.virtualgl.org/
 BuildRequires:	autoconf >= 2.56
 BuildRequires:	automake
@@ -185,7 +185,8 @@ Interfejs Javy do biblioteki TurboJPEG/OSS.
 %endif
 	--with-jpeg8
 
-%{__make} -j1
+LC_ALL=C.utf8 \
+	%{__make} -j1
 
 %{?with_tests:%{__make} test}
 
@@ -208,7 +209,7 @@ rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(644,root,root,755)
-%doc README change.log
+%doc README.md ChangeLog.md
 %attr(755,root,root) %{_libdir}/libjpeg.so.*.*.*
 %attr(755,root,root) %ghost %{_libdir}/libjpeg.so.8
 %attr(755,root,root) %{_libdir}/libturbojpeg.so.*.*.*
@@ -225,6 +226,8 @@ rm -rf $RPM_BUILD_ROOT
 %{_includedir}/jmorecfg.h
 %{_includedir}/jpeglib.h
 %{_includedir}/turbojpeg.h
+%{_pkgconfigdir}/libjpeg.pc
+%{_pkgconfigdir}/libturbojpeg.pc
 
 %files static
 %defattr(644,root,root,755)
