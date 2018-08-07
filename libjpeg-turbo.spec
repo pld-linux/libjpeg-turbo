@@ -8,18 +8,16 @@
 Summary:	A MMX/SSE2 accelerated library for manipulating JPEG image files
 Summary(pl.UTF-8):	Biblioteka do obróbki plików obrazów JPEG z akceleracją MMX/SSE2
 Name:		libjpeg-turbo
-Version:	1.5.3
+Version:	2.0.0
 Release:	1
 License:	wxWidgets
 Group:		Libraries
 Source0:	http://downloads.sourceforge.net/libjpeg-turbo/%{name}-%{version}.tar.gz
-# Source0-md5:	7c82f0f6a3130ec06b8a4d0b321cbca3
+# Source0-md5:	b12a3fcf1d078db38410f27718a91b83
 URL:		http://libjpeg-turbo.virtualgl.org/
-BuildRequires:	autoconf >= 2.56
-BuildRequires:	automake
+BuildRequires:	cmake
 %{?with_java:BuildRequires:	jdk}
 BuildRequires:	libstdc++-devel
-BuildRequires:	libtool
 # x86* SIMD code uses NASM; arm uses gas, no SIMD code for other archs
 %ifarch %{ix86} %{x8664}
 BuildRequires:	nasm
@@ -169,37 +167,23 @@ Interfejs Javy do biblioteki TurboJPEG/OSS.
 %setup -q
 
 %build
-%{__libtoolize}
-%{__aclocal}
-%{__autoconf}
-%{__automake}
-
-%configure \
-	--disable-silent-rules \
-	%{?with_java:JNI_CFLAGS="-I%{_jvmdir}/java/include -I%{_jvmdir}/java/include/linux"} \
-	--enable-shared \
-	--enable-static \
-	%{?with_java:--with-java} \
+install -d build && cd build
+%{cmake} \
+	%{?with_java:-DWITH_JAVA=ON} \
 %ifnarch %{ix86} %{x8664}
-	--without-simd \
+	-DWITH_SIMD=OFF \
 %endif
-	--with-jpeg8
-
-LC_ALL=C.utf8 \
-	%{__make} -j1
+	-DWITH_JPEG8=ON \
+	..
+%{__make}
 
 %{?with_tests:%{__make} test}
 
 %install
 rm -rf $RPM_BUILD_ROOT
 
-%{__make} install \
+%{__make} -C build install \
 	DESTDIR=$RPM_BUILD_ROOT
-
-%if %{with java}
-install -d $RPM_BUILD_ROOT%{_javadir}
-%{__mv} $RPM_BUILD_ROOT%{_datadir}/classes/turbojpeg.jar $RPM_BUILD_ROOT%{_javadir}
-%endif
 
 %clean
 rm -rf $RPM_BUILD_ROOT
@@ -219,8 +203,6 @@ rm -rf $RPM_BUILD_ROOT
 %defattr(644,root,root,755)
 %attr(755,root,root) %{_libdir}/libjpeg.so
 %attr(755,root,root) %{_libdir}/libturbojpeg.so
-%{_libdir}/libjpeg.la
-%{_libdir}/libturbojpeg.la
 %{_includedir}/jconfig.h
 %{_includedir}/jerror.h
 %{_includedir}/jmorecfg.h
