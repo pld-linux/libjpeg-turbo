@@ -5,20 +5,21 @@
 #
 %define		libjpeg_ver	8c
 %define		libjpeg_ver_lt	9-1
-Summary:	A MMX/SSE2 accelerated library for manipulating JPEG image files
-Summary(pl.UTF-8):	Biblioteka do obróbki plików obrazów JPEG z akceleracją MMX/SSE2
+Summary:	SIMD accelerated library for manipulating JPEG image files
+Summary(pl.UTF-8):	Biblioteka do obróbki plików obrazów JPEG z akceleracją SIMD
 Name:		libjpeg-turbo
 Version:	2.0.0
 Release:	1
-License:	wxWidgets
+# more specifically: IJG, modified-BSD or Zlib
+License:	BSD-like
 Group:		Libraries
 Source0:	http://downloads.sourceforge.net/libjpeg-turbo/%{name}-%{version}.tar.gz
 # Source0-md5:	b12a3fcf1d078db38410f27718a91b83
 URL:		http://libjpeg-turbo.virtualgl.org/
-BuildRequires:	cmake
+BuildRequires:	cmake >= 2.8.12
 %{?with_java:BuildRequires:	jdk}
 BuildRequires:	libstdc++-devel
-# x86* SIMD code uses NASM; arm uses gas, no SIMD code for other archs
+# x86* SIMD code uses NASM; ARM and MIPS use gas, PowerPC uses gcc intrinsics, no SIMD code for other archs
 %ifarch %{ix86} %{x8664}
 BuildRequires:	nasm
 %endif
@@ -28,16 +29,18 @@ Obsoletes:	libjpegsimd
 BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
 
 %description
-libjpeg-turbo is a version of libjpeg which uses MMX, SSE, and SSE2
-SIMD instructions to accelerate baseline JPEG
-compression/decompression by about 2-4x on x86 and x86-64 platforms.
+libjpeg-turbo is a version of libjpeg which uses SIMD (MMX, SSE2,
+AVX2, NEON, AltiVec) instructions to accelerate JPEG
+compression/decompression x86, ARM and PowerPC platforms.
+
 It is based on libjpeg/SIMD but has numerous enhancements.
 
 %description -l pl.UTF-8
 libjpeg-turbo to wersja biblioteki libjpeg wykorzystująca instrukcje
-SIMD MMX, SSE i SSE2 w celu przyspieszenia kompresji/dekompresji JPEG
-o około 2-4 razy na platformach x86 i x86-64. Jest oparta na
-libjpeg/SIMD, ale ma wiele rozszerzeń.
+SIMD (MMX, SSE2, AVX2, NEON, AltiVec) w celu przyspieszenia
+kompresji/dekompresji JPEG na platformach x86, ARM i PowerPC.
+
+Jest oparta na libjpeg/SIMD, ale ma wiele rozszerzeń.
 
 %package devel
 Summary:	Headers for developing programs using libjpeg-turbo
@@ -170,7 +173,7 @@ Interfejs Javy do biblioteki TurboJPEG/OSS.
 install -d build && cd build
 %{cmake} \
 	%{?with_java:-DWITH_JAVA=ON} \
-%ifnarch %{ix86} %{x8664}
+%ifnarch %{ix86} %{x8664} %{arm} ppc
 	-DWITH_SIMD=OFF \
 %endif
 	-DWITH_JPEG8=ON \
@@ -193,7 +196,7 @@ rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(644,root,root,755)
-%doc README.md ChangeLog.md
+%doc ChangeLog.md LICENSE.md README.ijg README.md change.log
 %attr(755,root,root) %{_libdir}/libjpeg.so.*.*.*
 %attr(755,root,root) %ghost %{_libdir}/libjpeg.so.8
 %attr(755,root,root) %{_libdir}/libturbojpeg.so.*.*.*
