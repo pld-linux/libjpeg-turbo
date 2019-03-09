@@ -8,13 +8,13 @@
 Summary:	SIMD accelerated library for manipulating JPEG image files
 Summary(pl.UTF-8):	Biblioteka do obróbki plików obrazów JPEG z akceleracją SIMD
 Name:		libjpeg-turbo
-Version:	2.0.0
+Version:	2.0.2
 Release:	1
 # more specifically: IJG, modified-BSD or Zlib
 License:	BSD-like
 Group:		Libraries
 Source0:	http://downloads.sourceforge.net/libjpeg-turbo/%{name}-%{version}.tar.gz
-# Source0-md5:	b12a3fcf1d078db38410f27718a91b83
+# Source0-md5:	79f76fbfb0c6109631332762d10e16d2
 URL:		http://libjpeg-turbo.virtualgl.org/
 BuildRequires:	cmake >= 2.8.12
 %{?with_java:BuildRequires:	jdk}
@@ -170,14 +170,15 @@ Interfejs Javy do biblioteki TurboJPEG/OSS.
 %setup -q
 
 %build
-install -d build && cd build
-%{cmake} \
+install -d build
+cd build
+%cmake .. \
 	%{?with_java:-DWITH_JAVA=ON} \
 %ifnarch %{ix86} %{x8664} %{arm} ppc
 	-DWITH_SIMD=OFF \
 %endif
-	-DWITH_JPEG8=ON \
-	..
+	-DWITH_JPEG8=ON
+
 %{__make}
 
 %{?with_tests:%{__make} test}
@@ -188,6 +189,9 @@ rm -rf $RPM_BUILD_ROOT
 %{__make} -C build install \
 	DESTDIR=$RPM_BUILD_ROOT
 
+# packaged as %doc
+%{__rm} $RPM_BUILD_ROOT%{_docdir}/{LICENSE.md,README.{ijg,md},TJExample.java,example.txt,libjpeg.txt,structure.txt,tjexample.c,usage.txt,wizard.txt}
+
 %clean
 rm -rf $RPM_BUILD_ROOT
 
@@ -196,7 +200,7 @@ rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(644,root,root,755)
-%doc ChangeLog.md LICENSE.md README.ijg README.md change.log
+%doc ChangeLog.md LICENSE.md README.ijg README.md change.log usage.txt wizard.txt
 %attr(755,root,root) %{_libdir}/libjpeg.so.*.*.*
 %attr(755,root,root) %ghost %{_libdir}/libjpeg.so.8
 %attr(755,root,root) %{_libdir}/libturbojpeg.so.*.*.*
@@ -204,6 +208,7 @@ rm -rf $RPM_BUILD_ROOT
 
 %files devel
 %defattr(644,root,root,755)
+%doc example.txt libjpeg.txt structure.txt tjexample.c
 %attr(755,root,root) %{_libdir}/libjpeg.so
 %attr(755,root,root) %{_libdir}/libturbojpeg.so
 %{_includedir}/jconfig.h
@@ -236,6 +241,6 @@ rm -rf $RPM_BUILD_ROOT
 %if %{with java}
 %files -n java-turbojpeg
 %defattr(644,root,root,755)
-%doc java/doc/*
+%doc java/TJExample.java java/doc/*
 %{_javadir}/turbojpeg.jar
 %endif
