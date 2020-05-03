@@ -190,7 +190,7 @@ rm -rf $RPM_BUILD_ROOT
 	DESTDIR=$RPM_BUILD_ROOT
 
 # packaged as %doc
-%{__rm} $RPM_BUILD_ROOT%{_docdir}/{LICENSE.md,README.{ijg,md},TJExample.java,example.txt,libjpeg.txt,structure.txt,tjexample.c,usage.txt,wizard.txt}
+%{__rm} $RPM_BUILD_ROOT%{_docdir}/{LICENSE.md,README.{ijg,md},%{?with_java:TJExample.java,}example.txt,libjpeg.txt,structure.txt,tjexample.c,usage.txt,wizard.txt}
 
 %clean
 rm -rf $RPM_BUILD_ROOT
