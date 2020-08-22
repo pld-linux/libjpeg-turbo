@@ -15,7 +15,7 @@ License:	BSD-like
 Group:		Libraries
 Source0:	http://downloads.sourceforge.net/libjpeg-turbo/%{name}-%{version}.tar.gz
 # Source0-md5:	3a7dc293918775fc933f81e2bce36464
-URL:		http://libjpeg-turbo.virtualgl.org/
+URL:		https://libjpeg-turbo.org/
 BuildRequires:	cmake >= 2.8.12
 %{?with_java:BuildRequires:	jdk}
 BuildRequires:	libstdc++-devel
