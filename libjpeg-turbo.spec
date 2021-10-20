@@ -8,15 +8,15 @@
 Summary:	SIMD accelerated library for manipulating JPEG image files
 Summary(pl.UTF-8):	Biblioteka do obróbki plików obrazów JPEG z akceleracją SIMD
 Name:		libjpeg-turbo
-Version:	2.0.6
+Version:	2.1.1
 Release:	1
 # more specifically: IJG, modified-BSD or Zlib
 License:	BSD-like
 Group:		Libraries
 Source0:	https://downloads.sourceforge.net/libjpeg-turbo/%{name}-%{version}.tar.gz
-# Source0-md5:	4cada3f0bdc93d826fa31bf9e4469ef6
+# Source0-md5:	cf16866976ab31cd6fc478eac8c2c54e
 URL:		https://libjpeg-turbo.org/
-BuildRequires:	cmake >= 2.8.12
+BuildRequires:	cmake >= 3.9.0
 %{?with_java:BuildRequires:	jdk}
 BuildRequires:	libstdc++-devel
 # x86* SIMD code uses NASM; ARM and MIPS use gas, PowerPC uses gcc intrinsics, no SIMD code for other archs
@@ -174,7 +174,7 @@ install -d build
 cd build
 %cmake .. \
 	%{?with_java:-DWITH_JAVA=ON} \
-%ifnarch %{ix86} %{x8664} %{arm} aarch64 ppc
+%ifnarch %{ix86} %{x8664} x32 %{arm} aarch64 ppc
 	-DWITH_SIMD=OFF \
 %endif
 	-DWITH_JPEG8=ON
@@ -188,6 +188,9 @@ rm -rf $RPM_BUILD_ROOT
 
 %{__make} -C build install \
 	DESTDIR=$RPM_BUILD_ROOT
+
+# disable completeness check incompatible with split packaging
+%{__sed} -i -e '/^foreach(target .*IMPORT_CHECK_TARGETS/,/^endforeach/d; /^unset(_IMPORT_CHECK_TARGETS)/d' $RPM_BUILD_ROOT%{_libdir}/cmake/libjpeg-turbo/libjpeg-turboTargets.cmake
 
 # packaged as %doc
 %{__rm} $RPM_BUILD_ROOT%{_docdir}/{LICENSE.md,README.{ijg,md},%{?with_java:TJExample.java,}example.txt,libjpeg.txt,structure.txt,tjexample.c,usage.txt,wizard.txt}
@@ -218,6 +221,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_includedir}/turbojpeg.h
 %{_pkgconfigdir}/libjpeg.pc
 %{_pkgconfigdir}/libturbojpeg.pc
+%{_libdir}/cmake/libjpeg-turbo
 
 %files static
 %defattr(644,root,root,755)
