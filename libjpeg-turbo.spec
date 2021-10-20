@@ -8,13 +8,13 @@
 Summary:	SIMD accelerated library for manipulating JPEG image files
 Summary(pl.UTF-8):	Biblioteka do obróbki plików obrazów JPEG z akceleracją SIMD
 Name:		libjpeg-turbo
-Version:	2.0.5
+Version:	2.0.6
 Release:	1
 # more specifically: IJG, modified-BSD or Zlib
 License:	BSD-like
 Group:		Libraries
-Source0:	http://downloads.sourceforge.net/libjpeg-turbo/%{name}-%{version}.tar.gz
-# Source0-md5:	3a7dc293918775fc933f81e2bce36464
+Source0:	https://downloads.sourceforge.net/libjpeg-turbo/%{name}-%{version}.tar.gz
+# Source0-md5:	4cada3f0bdc93d826fa31bf9e4469ef6
 URL:		https://libjpeg-turbo.org/
 BuildRequires:	cmake >= 2.8.12
 %{?with_java:BuildRequires:	jdk}
@@ -25,7 +25,7 @@ BuildRequires:	nasm
 %endif
 Provides:	libjpeg = %{libjpeg_ver}
 Obsoletes:	libjpeg < %{libjpeg_ver_lt}
-Obsoletes:	libjpegsimd
+Obsoletes:	libjpegsimd < 7
 BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
 
 %description
@@ -49,7 +49,7 @@ Group:		Development/Libraries
 Requires:	%{name} = %{version}-%{release}
 Provides:	libjpeg-devel = %{libjpeg_ver}
 Obsoletes:	libjpeg-devel < %{libjpeg_ver_lt}
-Obsoletes:	libjpegsimd-devel
+Obsoletes:	libjpegsimd-devel < 7
 Conflicts:	libjpeg6-devel
 
 %description devel
@@ -100,7 +100,7 @@ Group:		Development/Libraries
 Requires:	%{name}-devel = %{version}-%{release}
 Provides:	libjpeg-static = %{libjpeg_ver}
 Obsoletes:	libjpeg-static < %{libjpeg_ver_lt}
-Obsoletes:	libjpegsimd-static
+Obsoletes:	libjpegsimd-static < 7
 Conflicts:	libjpeg-turbo6-static
 
 %description static
@@ -129,7 +129,7 @@ Group:		Development/Libraries
 Requires:	%{name} = %{version}-%{release}
 Provides:	libjpeg-progs = %{libjpeg_ver}
 Obsoletes:	libjpeg-progs < %{libjpeg_ver_lt}
-Obsoletes:	libjpegsimd-progs
+Obsoletes:	libjpegsimd-progs < 7
 Conflicts:	libjpeg-turbo6-progs
 
 %description progs
@@ -174,7 +174,7 @@ install -d build
 cd build
 %cmake .. \
 	%{?with_java:-DWITH_JAVA=ON} \
-%ifnarch %{ix86} %{x8664} %{arm} ppc
+%ifnarch %{ix86} %{x8664} %{arm} aarch64 ppc
 	-DWITH_SIMD=OFF \
 %endif
 	-DWITH_JPEG8=ON
