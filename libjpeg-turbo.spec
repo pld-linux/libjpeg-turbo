@@ -15,9 +15,11 @@ License:	BSD-like
 Group:		Libraries
 Source0:	https://downloads.sourceforge.net/libjpeg-turbo/%{name}-%{version}.tar.gz
 # Source0-md5:	cf16866976ab31cd6fc478eac8c2c54e
+Patch0:		%{name}-x32-java.patch
 URL:		https://libjpeg-turbo.org/
 BuildRequires:	cmake >= 3.9.0
 %{?with_java:BuildRequires:	jdk}
+%{?with_java:BuildRequires:	jre-X11}
 BuildRequires:	libstdc++-devel
 # x86* SIMD code uses NASM; ARM and MIPS use gas, PowerPC uses gcc intrinsics, no SIMD code for other archs
 %ifarch %{ix86} %{x8664}
@@ -168,6 +170,7 @@ Interfejs Javy do biblioteki TurboJPEG/OSS.
 
 %prep
 %setup -q
+%patch0 -p1
 
 %build
 install -d build

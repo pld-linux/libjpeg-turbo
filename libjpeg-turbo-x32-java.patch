@@ -1,0 +1,15 @@
+--- libjpeg-turbo-2.1.1/CMakeLists.txt.orig	2021-08-10 01:16:57.000000000 +0200
++++ libjpeg-turbo-2.1.1/CMakeLists.txt	2021-10-21 21:29:21.264419411 +0200
+@@ -185,12 +185,8 @@ option(WITH_ARITH_DEC "Include arithmeti
+ boolean_number(WITH_ARITH_DEC)
+ option(WITH_ARITH_ENC "Include arithmetic encoding support when emulating the libjpeg v6b API/ABI" TRUE)
+ boolean_number(WITH_ARITH_ENC)
+-if(CMAKE_C_COMPILER_ABI MATCHES "ELF X32")
+-  set(WITH_JAVA 0)
+-else()
+   option(WITH_JAVA "Build Java wrapper for the TurboJPEG API library (implies ENABLE_SHARED=1)" FALSE)
+   boolean_number(WITH_JAVA)
+-endif()
+ option(WITH_JPEG7 "Emulate libjpeg v7 API/ABI (this makes ${CMAKE_PROJECT_NAME} backward-incompatible with libjpeg v6b)" FALSE)
+ boolean_number(WITH_JPEG7)
+ option(WITH_JPEG8 "Emulate libjpeg v8 API/ABI (this makes ${CMAKE_PROJECT_NAME} backward-incompatible with libjpeg v6b)" FALSE)
