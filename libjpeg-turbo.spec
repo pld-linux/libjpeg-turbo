@@ -25,6 +25,7 @@ BuildRequires:	libstdc++-devel
 %ifarch %{ix86} %{x8664}
 BuildRequires:	nasm
 %endif
+BuildRequires:	rpmbuild(macros) >= 1.605
 Provides:	libjpeg = %{libjpeg_ver}
 Obsoletes:	libjpeg < %{libjpeg_ver_lt}
 Obsoletes:	libjpegsimd < 7
