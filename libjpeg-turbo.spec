@@ -5,7 +5,7 @@
 #
 %define		libjpeg_ver	8c
 %define		libjpeg_ver_lt	9-1
-%use_default_jdk
+%{?use_default_jdk}
 Summary:	SIMD accelerated library for manipulating JPEG image files
 Summary(pl.UTF-8):	Biblioteka do obróbki plików obrazów JPEG z akceleracją SIMD
 Name:		libjpeg-turbo
@@ -26,7 +26,7 @@ BuildRequires:	libstdc++-devel
 %ifarch %{ix86} %{x8664}
 BuildRequires:	nasm
 %endif
-BuildRequires:	rpmbuild(macros) >= 2.021
+BuildRequires:	rpmbuild(macros) >= 2.022
 Provides:	libjpeg = %{libjpeg_ver}
 Obsoletes:	libjpeg < %{libjpeg_ver_lt}
 Obsoletes:	libjpegsimd < 7
