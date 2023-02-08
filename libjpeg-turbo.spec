@@ -20,7 +20,7 @@ Patch0:		%{name}-x32-java.patch
 URL:		https://libjpeg-turbo.org/
 BuildRequires:	cmake >= 3.9.0
 %{?with_java:%buildrequires_jdk}
-%{?with_java:BuildRequires:	%{use_jdk}-jre-base-X11}
+%{?with_java:%{?use_jdk:BuildRequires:	%{use_jdk}-jre-base-X11}}
 BuildRequires:	libstdc++-devel
 # x86* SIMD code uses NASM; ARM and MIPS use gas, PowerPC uses gcc intrinsics, no SIMD code for other archs
 %ifarch %{ix86} %{x8664}
