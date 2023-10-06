@@ -9,13 +9,13 @@
 Summary:	SIMD accelerated library for manipulating JPEG image files
 Summary(pl.UTF-8):	Biblioteka do obróbki plików obrazów JPEG z akceleracją SIMD
 Name:		libjpeg-turbo
-Version:	2.1.5.1
+Version:	3.0.0
 Release:	1
 # more specifically: IJG, modified-BSD or Zlib
 License:	BSD-like
 Group:		Libraries
 Source0:	https://downloads.sourceforge.net/libjpeg-turbo/%{name}-%{version}.tar.gz
-# Source0-md5:	aed60d4d776dd5cf00b5a01c609d50f7
+# Source0-md5:	aa1f0a1c72cb6772e34d9d5136267f56
 Patch0:		%{name}-x32-java.patch
 URL:		https://libjpeg-turbo.org/
 BuildRequires:	cmake >= 3.9.0
@@ -199,7 +199,7 @@ rm -rf $RPM_BUILD_ROOT
 %{__sed} -i -e '/^foreach(target .*IMPORT_CHECK_TARGETS/,/^endforeach/d; /^unset(_IMPORT_CHECK_TARGETS)/d' $RPM_BUILD_ROOT%{_libdir}/cmake/libjpeg-turbo/libjpeg-turboTargets.cmake
 
 # packaged as %doc
-%{__rm} $RPM_BUILD_ROOT%{_docdir}/{LICENSE.md,README.{ijg,md},%{?with_java:TJExample.java,}example.txt,libjpeg.txt,structure.txt,tjexample.c,usage.txt,wizard.txt}
+%{__rm} $RPM_BUILD_ROOT%{_docdir}/{LICENSE.md,README.{ijg,md},%{?with_java:TJExample.java,}example.c,libjpeg.txt,structure.txt,tjexample.c,usage.txt,wizard.txt}
 
 %clean
 rm -rf $RPM_BUILD_ROOT
@@ -217,7 +217,7 @@ rm -rf $RPM_BUILD_ROOT
 
 %files devel
 %defattr(644,root,root,755)
-%doc example.txt libjpeg.txt structure.txt tjexample.c
+%doc example.c libjpeg.txt structure.txt tjexample.c
 %attr(755,root,root) %{_libdir}/libjpeg.so
 %attr(755,root,root) %{_libdir}/libturbojpeg.so
 %{_includedir}/jconfig.h
