@@ -1,7 +1,8 @@
 #
 # Conditional build
-%bcond_without	tests	# don't perform "make test"
-%bcond_without	java	# Java binding
+%bcond_without	tests		# don't perform "make test"
+%bcond_without	java		# Java binding
+%bcond_without	static_libs	# static libraries
 #
 %define		libjpeg_ver	8c
 %define		libjpeg_ver_lt	9-1
@@ -179,6 +180,7 @@ export JAVA_HOME="%{java_home}"
 install -d build
 cd build
 %cmake .. \
+	%{cmake_on_off static_libs ENABLE_STATIC} \
 	%{?with_java:-DWITH_JAVA=ON} \
 %ifnarch %{ix86} %{x8664} x32 %{arm} aarch64 ppc
 	-DWITH_SIMD=OFF \
@@ -229,10 +231,12 @@ rm -rf $RPM_BUILD_ROOT
 %{_pkgconfigdir}/libturbojpeg.pc
 %{_libdir}/cmake/libjpeg-turbo
 
+%if %{with static_libs}
 %files static
 %defattr(644,root,root,755)
 %{_libdir}/libjpeg.a
 %{_libdir}/libturbojpeg.a
+%endif
 
 %files progs
 %defattr(644,root,root,755)
