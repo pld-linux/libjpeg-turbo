@@ -10,13 +10,13 @@
 Summary:	SIMD accelerated library for manipulating JPEG image files
 Summary(pl.UTF-8):	Biblioteka do obróbki plików obrazów JPEG z akceleracją SIMD
 Name:		libjpeg-turbo
-Version:	3.0.4
+Version:	3.1.0
 Release:	1
 # more specifically: IJG, modified-BSD or Zlib
 License:	BSD-like
 Group:		Libraries
 Source0:	https://github.com/libjpeg-turbo/libjpeg-turbo/releases/download/%{version}/%{name}-%{version}.tar.gz
-# Source0-md5:	2dbbe00556b2cbb7d2aa5f2541a08a17
+# Source0-md5:	ed3fb4bb4cf794898f11a6d30c54b479
 Patch0:		%{name}-x32-java.patch
 URL:		https://libjpeg-turbo.org/
 BuildRequires:	cmake >= 3.9.0
@@ -201,7 +201,7 @@ rm -rf $RPM_BUILD_ROOT
 %{__sed} -i -e '/^foreach(target .*IMPORT_CHECK_TARGETS/,/^endforeach/d; /^unset(_IMPORT_CHECK_TARGETS)/d' $RPM_BUILD_ROOT%{_libdir}/cmake/libjpeg-turbo/libjpeg-turboTargets.cmake
 
 # packaged as %doc
-%{__rm} $RPM_BUILD_ROOT%{_docdir}/{LICENSE.md,README.{ijg,md},%{?with_java:TJExample.java,}example.c,libjpeg.txt,structure.txt,tjexample.c,usage.txt,wizard.txt}
+%{__rm} $RPM_BUILD_ROOT%{_docdir}/{LICENSE.md,README.{ijg,md},%{?with_java:TJComp.java,TJDecomp.java,TJTran.java,}example.c,libjpeg.txt,structure.txt,tjcomp.c,tjdecomp.c,tjtran.c,usage.txt,wizard.txt}
 
 %clean
 rm -rf $RPM_BUILD_ROOT
@@ -211,7 +211,7 @@ rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(644,root,root,755)
-%doc ChangeLog.md LICENSE.md README.ijg README.md change.log usage.txt wizard.txt
+%doc ChangeLog.md LICENSE.md README.ijg README.md doc/{change.log,usage.txt,wizard.txt}
 %attr(755,root,root) %{_libdir}/libjpeg.so.*.*.*
 %attr(755,root,root) %ghost %{_libdir}/libjpeg.so.8
 %attr(755,root,root) %{_libdir}/libturbojpeg.so.*.*.*
@@ -219,7 +219,7 @@ rm -rf $RPM_BUILD_ROOT
 
 %files devel
 %defattr(644,root,root,755)
-%doc example.c libjpeg.txt structure.txt tjexample.c
+%doc src/example.c doc/{libjpeg.txt,structure.txt} src/{tjcomp.c,tjdecomp.c,tjtran.c}
 %attr(755,root,root) %{_libdir}/libjpeg.so
 %attr(755,root,root) %{_libdir}/libturbojpeg.so
 %{_includedir}/jconfig.h
@@ -255,6 +255,6 @@ rm -rf $RPM_BUILD_ROOT
 %if %{with java}
 %files -n java-turbojpeg
 %defattr(644,root,root,755)
-%doc java/TJExample.java java/doc/*
+%doc java/{TJComp.java,TJDecomp.java,TJTran.java} java/doc/*
 %{_javadir}/turbojpeg.jar
 %endif
