@@ -173,7 +173,7 @@ Interfejs Javy do biblioteki TurboJPEG/OSS.
 
 %prep
 %setup -q
-%patch0 -p1
+%patch -P0 -p1
 
 %build
 export JAVA_HOME="%{java_home}"
