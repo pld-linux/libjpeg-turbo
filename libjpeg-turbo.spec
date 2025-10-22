@@ -11,7 +11,7 @@ Summary:	SIMD accelerated library for manipulating JPEG image files
 Summary(pl.UTF-8):	Biblioteka do obróbki plików obrazów JPEG z akceleracją SIMD
 Name:		libjpeg-turbo
 Version:	3.1.2
-Release:	1
+Release:	2
 # more specifically: IJG, modified-BSD or Zlib
 License:	BSD-like
 Group:		Libraries
@@ -29,6 +29,7 @@ BuildRequires:	nasm
 %endif
 BuildRequires:	rpmbuild(macros) >= 2.022
 Provides:	libjpeg = %{libjpeg_ver}
+%{?_isa:Provides:	libjpeg%{_isa} = %{libjpeg_ver}}
 Obsoletes:	libjpeg < %{libjpeg_ver_lt}
 Obsoletes:	libjpegsimd < 7
 BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
@@ -53,6 +54,7 @@ Summary(pl.UTF-8):	Pliki nagłówkowe do tworzenia programów przy użyciu libjp
 Group:		Development/Libraries
 Requires:	%{name} = %{version}-%{release}
 Provides:	libjpeg-devel = %{libjpeg_ver}
+%{?_isa:Provides:	libjpeg-devel%{_isa} = %{libjpeg_ver}}
 Obsoletes:	libjpeg-devel < %{libjpeg_ver_lt}
 Obsoletes:	libjpegsimd-devel < 7
 Conflicts:	libjpeg6-devel
@@ -104,6 +106,7 @@ Summary(uk.UTF-8):	Статична бібліотека для програму
 Group:		Development/Libraries
 Requires:	%{name}-devel = %{version}-%{release}
 Provides:	libjpeg-static = %{libjpeg_ver}
+%{?_isa:Provides:	libjpeg-static%{_isa} = %{libjpeg_ver}}
 Obsoletes:	libjpeg-static < %{libjpeg_ver_lt}
 Obsoletes:	libjpegsimd-static < 7
 Conflicts:	libjpeg-turbo6-static
@@ -133,6 +136,7 @@ Summary(pl.UTF-8):	Kilka prostych programów do manipulowania na plikach JPEG
 Group:		Development/Libraries
 Requires:	%{name} = %{version}-%{release}
 Provides:	libjpeg-progs = %{libjpeg_ver}
+%{?_isa:Provides:	libjpeg-progs%{_isa} = %{libjpeg_ver}}
 Obsoletes:	libjpeg-progs < %{libjpeg_ver_lt}
 Obsoletes:	libjpegsimd-progs < 7
 Conflicts:	libjpeg-turbo6-progs
