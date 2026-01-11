@@ -52,7 +52,7 @@ Jest oparta na libjpeg/SIMD, ale ma wiele rozszerzeń.
 Summary:	Headers for developing programs using libjpeg-turbo
 Summary(pl.UTF-8):	Pliki nagłówkowe do tworzenia programów przy użyciu libjpeg-turbo
 Group:		Development/Libraries
-Requires:	%{name} = %{version}-%{release}
+Requires:	%{name}%{?_isa} = %{version}-%{release}
 Provides:	libjpeg-devel = %{libjpeg_ver}
 %{?_isa:Provides:	libjpeg-devel%{_isa} = %{libjpeg_ver}}
 Obsoletes:	libjpeg-devel < %{libjpeg_ver_lt}
@@ -104,7 +104,7 @@ Summary(pt_BR.UTF-8):	Bibliotecas estáticas para desenvolvimento com libjpeg-tu
 Summary(ru.UTF-8):	Статическая библиотека для программирования с libjpeg-turbo
 Summary(uk.UTF-8):	Статична бібліотека для програмування з libjpeg-turbo
 Group:		Development/Libraries
-Requires:	%{name}-devel = %{version}-%{release}
+Requires:	%{name}-devel%{?_isa} = %{version}-%{release}
 Provides:	libjpeg-static = %{libjpeg_ver}
 %{?_isa:Provides:	libjpeg-static%{_isa} = %{libjpeg_ver}}
 Obsoletes:	libjpeg-static < %{libjpeg_ver_lt}
@@ -134,7 +134,7 @@ Summary(de.UTF-8):	Einfachen Clients zur Manipulation von JPEG
 Summary(fr.UTF-8):	Clients simples pour manipuler des images JPEG
 Summary(pl.UTF-8):	Kilka prostych programów do manipulowania na plikach JPEG
 Group:		Development/Libraries
-Requires:	%{name} = %{version}-%{release}
+Requires:	%{name}%{?_isa} = %{version}-%{release}
 Provides:	libjpeg-progs = %{libjpeg_ver}
 %{?_isa:Provides:	libjpeg-progs%{_isa} = %{libjpeg_ver}}
 Obsoletes:	libjpeg-progs < %{libjpeg_ver_lt}
