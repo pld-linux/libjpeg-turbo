@@ -10,23 +10,28 @@
 Summary:	SIMD accelerated library for manipulating JPEG image files
 Summary(pl.UTF-8):	Biblioteka do obróbki plików obrazów JPEG z akceleracją SIMD
 Name:		libjpeg-turbo
-Version:	3.1.4.1
+Version:	3.2.0
 Release:	1
 # more specifically: IJG, modified-BSD or Zlib
 License:	BSD-like
 Group:		Libraries
 Source0:	https://github.com/libjpeg-turbo/libjpeg-turbo/releases/download/%{version}/%{name}-%{version}.tar.gz
-# Source0-md5:	997f868afac9f358a098617d16f36167
+# Source0-md5:	a80f9f1c735b57d3cdd66daed1ba6bb4
 Patch0:		%{name}-x32-java.patch
 URL:		https://libjpeg-turbo.org/
-BuildRequires:	cmake >= 3.9.0
-%{?with_java:%buildrequires_jdk}
-%{?with_java:%{?buildrequires_jre_x11}}
+BuildRequires:	cmake >= 3.15
+%if %{with java}
+%buildrequires_jdk
+%{?buildrequires_jre_x11}
+BuildRequires:	java-jna
+%endif
+BuildRequires:	libspng-devel
 BuildRequires:	libstdc++-devel
 # x86* SIMD code uses NASM; ARM and MIPS use gas, PowerPC uses gcc intrinsics, no SIMD code for other archs
 %ifarch %{ix86} %{x8664}
 BuildRequires:	nasm
 %endif
+BuildRequires:	pkgconfig
 BuildRequires:	rpmbuild(macros) >= 2.062
 Provides:	libjpeg = %{libjpeg_ver}
 %{?_isa:Provides:	libjpeg%{_isa} = %{libjpeg_ver}}
@@ -181,19 +186,18 @@ Interfejs Javy do biblioteki TurboJPEG/OSS.
 
 %build
 export JAVA_HOME="%{java_home}"
-install -d build
-cd build
-%cmake .. \
+%cmake -B build \
 	%{cmake_on_off static_libs ENABLE_STATIC} \
-	%{?with_java:-DWITH_JAVA=ON} \
+	%{?with_java:-DWITH_JNA=%{_javadir}/jna.jar} \
 %ifnarch %{ix86} %{x8664} x32 %{arm} aarch64 ppc
 	-DWITH_SIMD=OFF \
 %endif
-	-DWITH_JPEG8=ON
+	-DWITH_JPEG8=ON \
+	-DWITH_SYSTEM_SPNG=ON
 
-%{__make}
+%{__make} -C build
 
-%{?with_tests:%{__make} test}
+%{?with_tests:%{__make} -C build test}
 
 %install
 rm -rf $RPM_BUILD_ROOT
@@ -205,7 +209,7 @@ rm -rf $RPM_BUILD_ROOT
 %{__sed} -i -e '/^foreach(target .*IMPORT_CHECK_TARGETS/,/^endforeach/d; /^unset(_IMPORT_CHECK_TARGETS)/d' $RPM_BUILD_ROOT%{_libdir}/cmake/libjpeg-turbo/libjpeg-turboTargets.cmake
 
 # packaged as %doc
-%{__rm} $RPM_BUILD_ROOT%{_docdir}/{LICENSE.md,README.{ijg,md},%{?with_java:TJComp.java,TJDecomp.java,TJTran.java,}example.c,libjpeg.txt,structure.txt,tjcomp.c,tjdecomp.c,tjtran.c,usage.txt,wizard.txt}
+%{__rm} $RPM_BUILD_ROOT%{_docdir}/{LICENSE.md,README.{ijg,md},%{?with_java:jna/{TJ.java,TJComp.java,TJDecomp.java,TJTran.java},}example.c,libjpeg.txt,structure.txt,tjcomp.c,tjdecomp.c,tjtran.c,usage.txt,wizard.txt}
 
 %clean
 rm -rf $RPM_BUILD_ROOT
@@ -259,6 +263,6 @@ rm -rf $RPM_BUILD_ROOT
 %if %{with java}
 %files -n java-turbojpeg
 %defattr(644,root,root,755)
-%doc java/{TJComp.java,TJDecomp.java,TJTran.java} java/doc/*
-%{_javadir}/turbojpeg.jar
+%doc jna/{TJ.java,TJComp.java,TJDecomp.java,TJTran.java}
+%{_javadir}/turbojpeg-jna.jar
 %endif

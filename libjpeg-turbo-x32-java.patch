@@ -1,16 +1,17 @@
---- libjpeg-turbo-3.0.3/CMakeLists.txt.orig	2024-05-08 19:25:20.015726194 +0200
-+++ libjpeg-turbo-3.0.3/CMakeLists.txt	2024-05-08 19:27:05.309401756 +0200
-@@ -229,14 +229,10 @@
+--- libjpeg-turbo-3.2.0/CMakeLists.txt.orig	2026-06-30 19:25:43.000000000 +0200
++++ libjpeg-turbo-3.2.0/CMakeLists.txt	2026-06-30 22:53:15.666894122 +0200
+@@ -261,15 +261,11 @@
    "Include arithmetic encoding support when emulating the libjpeg v6b API/ABI"
    TRUE)
  boolean_number(WITH_ARITH_ENC)
 -if(CMAKE_C_COMPILER_ABI MATCHES "ELF X32")
--  set(WITH_JAVA 0)
+-  unset(WITH_JNA)
 -else()
-   option(WITH_JAVA
-     "Build TurboJPEG Java API and JNI wrapper for the TurboJPEG API library (implies ENABLE_SHARED=1 and WITH_TURBOJPEG=1)"
-     FALSE)
-   boolean_number(WITH_JAVA)
+   set(WITH_JNA "" CACHE PATH
+     "Build TurboJPEG Java Native Access interfaces (TurboJPEG/JNA) using the specified JNA JAR path (implies ENABLE_SHARED=1 and WITH_TURBOJPEG=1)")
+   if(WITH_JNA AND NOT EXISTS ${WITH_JNA})
+     message(FATAL_ERROR "${WITH_JNA} does not exist.")
+   endif()
 -endif()
  option(WITH_JPEG7
    "Emulate libjpeg v7 API/ABI (this makes ${CMAKE_PROJECT_NAME} backward-incompatible with libjpeg v6b)"
