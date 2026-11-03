@@ -10,15 +10,14 @@
 Summary:	SIMD accelerated library for manipulating JPEG image files
 Summary(pl.UTF-8):	Biblioteka do obróbki plików obrazów JPEG z akceleracją SIMD
 Name:		libjpeg-turbo
-Version:	3.2.0
-Release:	2
+Version:	3.2.1
+Release:	1
 # more specifically: IJG, modified-BSD or Zlib
 License:	BSD-like
 Group:		Libraries
 Source0:	https://github.com/libjpeg-turbo/libjpeg-turbo/releases/download/%{version}/%{name}-%{version}.tar.gz
-# Source0-md5:	a80f9f1c735b57d3cdd66daed1ba6bb4
+# Source0-md5:	dad2613d70883fee715599d5f363bf46
 Patch0:		%{name}-x32-java.patch
-Patch1:		bug901.patch
 URL:		https://libjpeg-turbo.org/
 BuildRequires:	cmake >= 3.15
 %if %{with java}
@@ -184,7 +183,6 @@ Interfejs Javy do biblioteki TurboJPEG/OSS.
 %prep
 %setup -q
 %patch -P0 -p1
-%patch -P1 -p1
 
 %build
 export JAVA_HOME="%{java_home}"
